@@ -41,16 +41,25 @@
       this.connect();
     },
 
+    defaultWsUrl(){
+      /* 默认与页面同源：部署后（如 Render）页面和 WebSocket 是同一服务，零配置 */
+      if(location.protocol==='https:')return 'wss://'+location.host;
+      return 'ws://'+location.hostname+':3001';
+    },
+
     getWsUrl(params){
+      /* 优先级：链接显式 ws 参数 > localStorage 调试覆盖 > 同源默认 */
       let u=params.get('ws');
       if(u){
         u=decodeURIComponent(u);
-        // 允许写成 ws://host 或 host
         if(!/^wss?:\/\//i.test(u)) u=(location.protocol==='https:'?'wss://':'ws://')+u;
         return u;
       }
-      const proto=location.protocol==='https:'?'wss:':'ws:';
-      return proto+'//'+location.hostname+':3001';
+      try{
+        const saved=localStorage.getItem('jw-ws-override');
+        if(saved&&/^wss?:\/\//i.test(saved))return saved;
+      }catch(e){}
+      return this.defaultWsUrl();
     },
 
     connect(){
@@ -262,10 +271,12 @@
     },
 
     inviteUrl(){
+      /* 干净链接：只带房间号；ws 与默认一致时不写入，换服务器才附加 */
+      const extra=(this.wsUrl&&this.wsUrl!==this.defaultWsUrl())?'&ws='+encodeURIComponent(this.wsUrl):'';
       try{
         const u=new URL(location.href);u.search='';
-        return u.toString()+'?v=8&mode='+this.mode+'&role=client&room='+this.room+(this.wsUrl?'&ws='+encodeURIComponent(this.wsUrl):'');
-      }catch(e){return 'game.html?v=8&mode='+this.mode+'&role=client&room='+this.room+'&ws='+encodeURIComponent(this.wsUrl);}
+        return u.toString()+'?v=9&mode='+this.mode+'&role=client&room='+this.room+extra;
+      }catch(e){return 'game.html?v=9&mode='+this.mode+'&role=client&room='+this.room+extra;}
     },
 
     showLobby(){
