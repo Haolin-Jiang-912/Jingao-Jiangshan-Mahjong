@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><title>鸡歪麻将厅 · 牌局</title><link rel="stylesheet" href="style.css?v=10"></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><title>鸡歪麻将厅 · 牌局</title><link rel="stylesheet" href="style.css?v=17"></head>
 <body class="game-page"><div class="scanlines"></div><div id="rotateTip"><div class="ph">📱</div><b>请横屏游玩</b><small>把手机转过来，牌桌更宽敞</small><button id="tipGo">仍要竖屏继续</button></div>
 <script>
 /* 手机端检测：UA + 屏幕宽度判定，不依赖 CSS orientation 媒体查询 */
 (function(){
-  var isMobile=/Android|iPhone|iPad|iPod|Mobile|Windows Phone|Tablet|MicroMessenger/i.test(navigator.userAgent)||window.innerWidth<=920;
+  /* 只按实际屏幕尺寸判断移动布局，避免微信 PC 与 Chrome PC 因 UA 不同而显示两套画面 */
+  var isMobile=window.innerWidth<=920||(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches&&window.innerWidth<=1200);
   if(!isMobile)return;
   document.body.classList.add('mobile-mode');
   var tip=document.getElementById('rotateTip');if(tip)tip.style.display='none';
@@ -31,7 +32,6 @@
  <div class="blackboard">锦高优秀学子养成计划<br><small>认真学习 · 课间娱乐 · 只许自摸</small></div>
  <div class="teacher">
    <div class="teacher-figure" aria-hidden="true"><div class="t-head"></div><div class="t-body"></div><div class="t-arm"></div></div>
-   <div class="teacher-bubble">老师：<span>?</span> 这道题谁上来解一下？</div>
  </div>
  <div class="window w1"></div><div class="window w2"></div>
  <!-- 后排课桌：黑板前平行排列 -->

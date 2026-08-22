@@ -142,7 +142,7 @@
 .omelds{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;max-width:116px}
 /* 中央弃牌区 */
 .center-board{position:absolute;inset:16% 24% 26% 24%;background:#2c6a4ecc;border:3px solid #1d4b34;border-radius:8px;box-shadow:inset 0 0 24px #10331f;z-index:5;overflow:hidden}
-.center-board b{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#17305d;border:2px solid #f3d576;color:#ffefaa;font-size:.8rem;padding:.3rem .8rem;white-space:nowrap;z-index:6}
+.center-board b{position:absolute;top:auto;bottom:10%;left:50%;transform:translateX(-50%);background:#17305d;border:2px solid #f3d576;color:#ffefaa;font-size:.8rem;padding:.3rem .8rem;white-space:nowrap;z-index:6}
 .dz{position:absolute;display:flex;flex-wrap:wrap;gap:2px;overflow:hidden;align-content:flex-start}
 .dz-t{top:30px;left:50%;transform:translateX(-50%);width:62%;justify-content:center;max-height:78px;align-content:center}
 .dz-b{bottom:8px;left:50%;transform:translateX(-50%);width:70%;justify-content:center;align-content:center}
@@ -345,3 +345,37 @@ body.mobile-mode .desk-table{
   .dz-l{left:8px;width:39%;max-height:156px}
   .dz-r{right:8px;width:39%;max-height:156px}
 }
+
+/* ---------- 清晰对局布局：桌面端与微信/Chrome 使用同一套画面 ---------- */
+body.game-page:not(.mobile-mode){overflow:hidden}
+body.game-page:not(.mobile-mode) .pixel-header{height:44px;padding:0 2vw}
+body.game-page:not(.mobile-mode) .pixel-header b{font-size:1.2rem}
+body.game-page:not(.mobile-mode) .pixel-header a{font-size:.78rem}
+body.game-page:not(.mobile-mode) .pixel-header button{padding:.4rem .55rem;font-size:.68rem}
+body.game-page:not(.mobile-mode) .classroom{min-height:calc(100vh - 44px);height:calc(100vh - 44px);overflow:hidden}
+body.game-page:not(.mobile-mode) .blackboard{top:6px;width:min(360px,34vw);height:48px;padding:7px;font-size:8px;line-height:1.45}
+body.game-page:not(.mobile-mode) .blackboard small{display:none}
+body.game-page:not(.mobile-mode) .teacher{top:58px;transform:translateX(-50%) scale(.72);transform-origin:top center}
+body.game-page:not(.mobile-mode) .teacher-bubble{display:none}
+body.game-page:not(.mobile-mode) .window,body.game-page:not(.mobile-mode) .back-classroom,body.game-page:not(.mobile-mode) .front-classroom{display:none}
+body.game-page:not(.mobile-mode) .table-meta{top:78px}
+body.game-page:not(.mobile-mode) .desk-table{margin:112px auto 0;width:min(1600px,96vw);height:min(calc(100vh - 160px),980px);min-height:0}
+body.game-page:not(.mobile-mode) .center-board b{bottom:10%;font-size:1rem;padding:.4rem 1rem}
+body.game-page:not(.mobile-mode) .hand-area{bottom:2.5%;padding:0 20px}
+body.game-page:not(.mobile-mode) .hand-area p{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin:0 0 8px;padding:5px 14px;background:#17305dcc;border:2px solid #f3d576;border-radius:6px;white-space:nowrap;z-index:25;font-size:.9rem}
+body.game-page:not(.mobile-mode) .hand{gap:4px;padding:8px}
+body.game-page:not(.mobile-mode) .tile{width:48px;height:72px;flex-basis:48px}
+body.game-page:not(.mobile-mode) .tile .wan .num{font-size:25px}
+body.game-page:not(.mobile-mode) .tile .wan .suit{font-size:22px}
+body.game-page:not(.mobile-mode) .tile .feng,body.game-page:not(.mobile-mode) .tile .zhong,body.game-page:not(.mobile-mode) .tile .fa{font-size:29px}
+body.game-page:not(.mobile-mode) .flower-rack{flex-basis:76px;min-height:88px}
+body.game-page:not(.mobile-mode) .opp .avatar{width:72px;height:90px}
+
+/* 手机仍保留一点黑板和老师，但不再占用牌桌操作空间 */
+body.mobile-mode .blackboard{display:block !important;position:fixed;top:2px;left:50%;width:240px;height:28px;padding:3px;transform:translateX(-50%);font-size:6px;line-height:1.2;z-index:25}
+body.mobile-mode .blackboard small{display:none}
+body.mobile-mode .teacher{display:block !important;position:fixed;top:31px;left:10px;transform:scale(.52);transform-origin:top left;z-index:25}
+body.mobile-mode .teacher-bubble{display:none}
+body.mobile-mode .desk-table{top:calc(50% + 14px) !important}
+body.mobile-mode .center-board b{bottom:8%;font-size:.82rem;padding:.25rem .55rem}
+body.mobile-mode .hand-area p{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin:0 0 6px;padding:4px 10px;background:#17305dcc;border:2px solid #f3d576;border-radius:5px;white-space:nowrap;z-index:25;font-size:.72rem}
