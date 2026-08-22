@@ -126,16 +126,35 @@ wss.on('connection',(ws, req)=>{
 
   let meta=null;
 
-  /* --- 会话恢复：token 匹配的掉线玩家重新入座（保持原 pid/座位） --- */
-  if(reqToken && room.gone && room.gone[reqToken]){
-    const g=room.gone[reqToken];
+  /* --- 会话恢复：token 匹配的掉线/僵尸玩家重新入座（保持原 pid/座位） --- */
+  let resumeRec=null;
+  if(reqToken){
+    if(room.gone && room.gone[reqToken]){
+      resumeRec=room.gone[reqToken];
+      if(resumeRec.timer){clearTimeout(resumeRec.timer);resumeRec.timer=null;}
+      delete room.gone[reqToken];
+    }else{
+      /* 旧连接还"活着"但真身带 token 回来了：视为僵尸，可接管 */
+      room.clients.forEach((m,w2)=>{
+        if(w2!==ws && m.token===reqToken && !resumeRec){
+          resumeRec={pid:m.pid,name:m.name,role:m.role,zombieWs:w2};
+        }
+      });
+    }
+  }
+  if(reqToken && resumeRec){
+    const g=resumeRec;
     if(g.timer){clearTimeout(g.timer);g.timer=null;}
     delete room.gone[reqToken];
     meta={pid:g.pid,name:g.name,role:g.role,token:reqToken};
+    if(g.zombieWs){
+      /* 接管前先踢掉僵尸连接 */
+      room.clients.delete(g.zombieWs);
+      if(room.hostWs===g.zombieWs)room.hostWs=null;
+      try{g.zombieWs.terminate();}catch(e){}
+    }
     if(g.role==='host'){
-      if(room.hostWs && room.hostWs.readyState===WebSocket.OPEN){
-        send(ws,{type:'error',text:'房主已在别处连接'});ws.close();return;
-      }
+      /* token 即身份：带着 token 回来的才是真房主 */
       if(room.graceTimer){clearTimeout(room.graceTimer);room.graceTimer=null;}
       room.hostWs=ws;
       room.clients.set(ws,meta);
@@ -146,6 +165,10 @@ wss.on('connection',(ws, req)=>{
       if(!room.hostWs || room.hostWs.readyState!==WebSocket.OPEN){
         send(ws,{type:'error',text:'房主不在线，无法恢复连接'});ws.close();return;
       }
+      /* 踢掉占着同一座位的僵尸连接 */
+      room.clients.forEach((m,w2)=>{
+        if(w2!==ws && m.pid===g.pid){room.clients.delete(w2);try{w2.terminate();}catch(e){}}
+      });
       room.clients.set(ws,meta);
       send(room.hostWs,{type:'rejoin',pid:meta.pid,name:meta.name});
       broadcast(room,lobbyMsg(room,roomId));

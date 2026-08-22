@@ -38,6 +38,7 @@
       this.names=[this.isHost?this.myName:'房主',null,null,null];
       if(!this.isHost)this.pid=-1;
       this.token='';this._joined=false;this._fatal=false;this._dc={};
+      try{ this.token=sessionStorage.getItem('jw-net-token-'+room)||''; }catch(e){} /* 刷新页面仍可恢复身份 */
       this.wsUrl=this.getWsUrl(params);
       this.connect(0);
     },
@@ -200,6 +201,7 @@
       if(this.isHost && data.type==='welcome'){
         /* 房主入座/重连：记录 token；若牌局已在进行则重推状态给所有客人 */
         if(data.token)this.token=data.token;
+        try{sessionStorage.setItem('jw-net-token-'+this.room,this.token);}catch(e){}
         this.names=(data.names||this.names).slice();
         this._joined=true;
         if(window.G&&window.G.h){
@@ -213,6 +215,7 @@
       if(!this.isHost && data.type==='welcome'){
         this.pid=data.pid;this.names=(data.names||this.names).slice();
         if(data.token)this.token=data.token;
+        try{sessionStorage.setItem('jw-net-token-'+this.room,this.token);}catch(e){}
         this._joined=true;
         if(this._syncTimer){clearInterval(this._syncTimer);this._syncTimer=null;}
         this.toHost({type:'ack',pid:this.pid,name:this.myName});
