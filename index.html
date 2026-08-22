@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><title>鸡歪麻将厅</title><link rel="stylesheet" href="style.css?v=9"></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><title>鸡歪麻将厅</title><link rel="stylesheet" href="style.css?v=10"></head>
 <body class="cover-page"><main class="cover-wrap">
   <div class="scanlines"></div><div class="cloud c1"></div><div class="cloud c2"></div>
   <section class="cover-card pixel-border">
@@ -20,8 +20,8 @@
       const roomIn=document.getElementById('roomCode'), joinBtn=document.getElementById('joinRoom'), nameIn=document.getElementById('playerName');
       function randCode(){return Math.random().toString(36).slice(2,8).toUpperCase();}
       function getName(){return encodeURIComponent((nameIn.value.trim()||'玩家').slice(0,8));}
-      document.getElementById('createRoom').onclick=e=>{e.preventDefault();location.href='game.html?v=9&mode=8&role=host&room='+randCode()+'&name='+getName();};
-      joinBtn.onclick=e=>{e.preventDefault();const code=roomIn.value.trim().toUpperCase();if(!code){alert('请输入房间号');roomIn.focus();return;}location.href='game.html?v=9&mode=8&role=client&room='+code+'&name='+getName();};
+      document.getElementById('createRoom').onclick=e=>{e.preventDefault();location.href='game.html?v=10&mode=8&role=host&room='+randCode()+'&name='+getName();};
+      joinBtn.onclick=e=>{e.preventDefault();const code=roomIn.value.trim().toUpperCase();if(!code){alert('请输入房间号');roomIn.focus();return;}location.href='game.html?v=10&mode=8&role=client&room='+code+'&name='+getName();};
       roomIn.addEventListener('keypress',e=>{if(e.key==='Enter')joinBtn.click();});
     </script>
   </section>

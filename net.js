@@ -37,8 +37,9 @@
       this.myName=decodeURIComponent(params.get('name')||'玩家').slice(0,8)||'玩家';
       this.names=[this.isHost?this.myName:'房主',null,null,null];
       if(!this.isHost)this.pid=-1;
+      this.token='';this._joined=false;this._fatal=false;this._dc={};
       this.wsUrl=this.getWsUrl(params);
-      this.connect();
+      this.connect(0);
     },
 
     defaultWsUrl(){
@@ -62,17 +63,22 @@
       return this.defaultWsUrl();
     },
 
-    connect(){
-      this.status('连接服务器…');
+    connect(retryCount=0){
+      const reconnect=retryCount>0;
+      this.status(reconnect?('重连中（第 '+retryCount+' 次）…'):'连接服务器…');
       this.diag.ws='连接 '+this.wsUrl.replace(/^wss?:\/\//,'');
       this.updateDiag();
+      const qs='room='+this.room+'&role='+(this.isHost?'host':'client')
+        +'&name='+encodeURIComponent(this.myName)+'&mode='+this.mode
+        +(this.token?'&token='+this.token:'');
       try{
-        this.ws=new WebSocket(this.wsUrl+'?room='+this.room+'&role='+(this.isHost?'host':'client')+'&name='+encodeURIComponent(this.myName)+'&mode='+this.mode);
+        this.ws=new WebSocket(this.wsUrl+'?'+qs);
       }catch(e){
         this.lobbyError('创建 WebSocket 失败：'+e);
         return;
       }
-      this.ws.onopen=()=>{this.diag.ws='已连接';};
+      let opened=false;
+      this.ws.onopen=()=>{opened=true;this.diag.ws='已连接';this.updateDiag();};
       this.ws.onmessage=(ev)=>{
         let d;
         try{d=JSON.parse(ev.data);}catch(e){return;}
@@ -80,13 +86,28 @@
         this.dispatch(d);
       };
       this.ws.onclose=()=>{
-        this.diag.ws='已断开';this.status('连接已断开');
+        this.diag.ws='已断开';this.updateDiag();
         if(this._syncTimer){clearInterval(this._syncTimer);this._syncTimer=null;}
+        this.onWsClosed(opened,retryCount);
       };
-      this.ws.onerror=(e)=>{
+      this.ws.onerror=()=>{
         this.diag.err='无法连接服务器';this.updateDiag();
-        this.status('连接失败');
       };
+    },
+
+    /* 断线自动重连：未入座时重试 4 次（退避 2/4/8/16s）；已入座后断线重连 6 次（间隔 3s） */
+    onWsClosed(opened,retryCount){
+      if(this._fatal)return; // 服务器明确拒绝（房间不存在/已满等），不重试
+      const maxRetry=this._joined?6:4;
+      if(retryCount>=maxRetry){
+        this.status('多次重连失败');
+        this.lobbyError('连接服务器失败（已自动重试 '+maxRetry+' 次）。请检查网络后刷新页面；若刷新后仍失败，请让房主重新开房。');
+        return;
+      }
+      const wait=this._joined?3000:(2000*(retryCount+1));
+      const why=opened?'连接断开':'连接失败';
+      this.status(why+'，'+Math.round(wait/1000)+' 秒后自动重试（'+(retryCount+1)+'/'+maxRetry+'）…');
+      setTimeout(()=>{this.connect(retryCount+1);},wait);
     },
 
     lobbyError(msg){
@@ -155,12 +176,54 @@
         return;
       }
 
+      if(this.isHost && data.type==='leave'){
+        /* 客人掉线：保留座位 90 秒等待重连 */
+        const pid=data.pid;
+        if(pid>=1&&pid<=3){
+          this._dc[pid]=true;
+          if(typeof note==='function')note((this.names[pid]||('玩家'+pid))+' 掉线了，等待重连…');
+          this.broadcast({type:'notify',text:(this.names[pid]||('玩家'+pid))+' 掉线了，等待重连…'});
+        }
+        return;
+      }
+      if(this.isHost && data.type==='rejoin'){
+        /* 客人重连恢复：重推完整状态，若是他的回合再补发 turn */
+        const pid=data.pid;
+        if(data.name)this.names[pid]=data.name;
+        this._dc[pid]=false;
+        try{this.broadcastState();}catch(e){}
+        if(window.G&&window.G.h&&window.G.h.turn===pid)this.sendTurn(pid);
+        if(typeof note==='function')note((this.names[pid]||('玩家'+pid))+' 已重新连接');
+        this.broadcast({type:'notify',text:(this.names[pid]||('玩家'+pid))+' 已重新连接'});
+        return;
+      }
+      if(this.isHost && data.type==='welcome'){
+        /* 房主入座/重连：记录 token；若牌局已在进行则重推状态给所有客人 */
+        if(data.token)this.token=data.token;
+        this.names=(data.names||this.names).slice();
+        this._joined=true;
+        if(window.G&&window.G.h){
+          this.status('已重新连接，同步牌局…');
+          setTimeout(()=>{try{this.broadcastState();}catch(e){}},300);
+        }
+        return;
+      }
+
       // 客户端收到房主/服务器消息
       if(!this.isHost && data.type==='welcome'){
         this.pid=data.pid;this.names=(data.names||this.names).slice();
+        if(data.token)this.token=data.token;
+        this._joined=true;
         if(this._syncTimer){clearInterval(this._syncTimer);this._syncTimer=null;}
         this.toHost({type:'ack',pid:this.pid,name:this.myName});
-        this.status('已连接房间 '+this.room+'，等待房主…');
+        if(window.G&&window.G.h){
+          /* 重连恢复：立刻拉取最新牌局 */
+          this.status('已重新连接，同步牌局…');
+          if(!this._syncTimer)this._syncTimer=setInterval(()=>{if(!window.G||!window.G.h)this.toHost({type:'sync'});else{clearInterval(this._syncTimer);this._syncTimer=null;}},2000);
+          try{this.toHost({type:'sync'});}catch(e){}
+        }else{
+          this.status('已连接房间 '+this.room+'，等待房主…');
+        }
         this.updateLobbyList();
         return;
       }
@@ -217,6 +280,7 @@
         return;
       }
       if(data.type==='error'){
+        this._fatal=true; // 服务器明确拒绝，停止自动重试
         this.lobbyError(data.text||'联机错误');return;
       }
       if(this.onMessage){this.onMessage(data);}
@@ -275,8 +339,8 @@
       const extra=(this.wsUrl&&this.wsUrl!==this.defaultWsUrl())?'&ws='+encodeURIComponent(this.wsUrl):'';
       try{
         const u=new URL(location.href);u.search='';
-        return u.toString()+'?v=9&mode='+this.mode+'&role=client&room='+this.room+extra;
-      }catch(e){return 'game.html?v=9&mode='+this.mode+'&role=client&room='+this.room+extra;}
+        return u.toString()+'?v=10&mode='+this.mode+'&role=client&room='+this.room+extra;
+      }catch(e){return 'game.html?v=10&mode='+this.mode+'&role=client&room='+this.room+extra;}
     },
 
     showLobby(){
