@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><title>鸡歪麻将厅 · 牌局</title><link rel="stylesheet" href="style.css?v=8"></head>
+<body class="game-page"><div class="scanlines"></div><div id="rotateTip"><div class="ph">📱</div><b>请横屏游玩</b><small>把手机转过来，牌桌更宽敞</small><button id="tipGo">仍要竖屏继续</button></div>
+<script>
+/* 手机端检测：UA + 屏幕宽度判定，不依赖 CSS orientation 媒体查询 */
+(function(){
+  var isMobile=/Android|iPhone|iPad|iPod|Mobile|Windows Phone|Tablet|MicroMessenger/i.test(navigator.userAgent)||window.innerWidth<=920;
+  if(!isMobile)return;
+  document.body.classList.add('mobile-mode');
+  var tip=document.getElementById('rotateTip');if(tip)tip.style.display='none';
+  function init(){
+    /* 把 netStatus 从 header 移到 body，避免 header display:none 导致它不可见 */
+    var ns=document.getElementById('netStatus');
+    if(ns&&ns.parentNode!==document.body)document.body.appendChild(ns);
+    fit();
+  }
+  function fit(){
+    var d=document.querySelector('.desk-table');if(!d)return;
+    var W=window.innerWidth,H=window.innerHeight,DW=1000,DH=640;
+    var s=Math.min(W/DW,H/DH);
+    d.style.transform='translate(-50%,-50%) scale('+s+')';
+  }
+  window.addEventListener('resize',fit);
+  window.addEventListener('orientationchange',function(){setTimeout(fit,100);setTimeout(fit,500);});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+  else init();
+})();
+</script>
+<header class="pixel-header"><a href="index.html">← 返回封面</a><b>鸡歪麻将厅</b><span id="handNo">第 1/8 盘</span><span id="netStatus"></span><div><button id="musicBtn">♫ 像素电台：开</button><button id="uploadMusic">上传MP3</button></div></header>
+<main class="classroom">
+ <div class="blackboard">锦高优秀学子养成计划<br><small>认真学习 · 课间娱乐 · 只许自摸</small></div>
+ <div class="teacher">
+   <div class="teacher-figure" aria-hidden="true"><div class="t-head"></div><div class="t-body"></div><div class="t-arm"></div></div>
+   <div class="teacher-bubble">老师：<span>?</span> 这道题谁上来解一下？</div>
+ </div>
+ <div class="window w1"></div><div class="window w2"></div>
+ <!-- 后排课桌：黑板前平行排列 -->
+ <div class="back-classroom">
+   <div class="student-desk-row"><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div></div>
+   <div class="student-desk-row row2"><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div></div>
+ </div>
+ <!-- 顶部信息条：翻牌/财神/牌墙/骰子，不压桌 -->
+ <div class="table-meta">
+   <div class="game-info"><span id="wealthBox" class="wealth-box"></span><span id="wallCount">牌墙 144</span><span id="diceBox" class="dice-box">⚄⚄</span></div>
+ </div>
+ <section class="desk-table" aria-label="四张课桌拼成的麻将桌">
+   <div class="desk d-top"></div><div class="desk d-right"></div><div class="desk d-bottom"></div><div class="desk d-left"></div>
+<article class="opp o-right" id="opp-1"><div class="oscore" data-p="1">超超 <b>0</b></div><img class="avatar" src="avatar-chaochao.png"><div class="backs"></div><div class="omelds"></div><div class="oflowers"></div></article>
+<article class="opp o-top" id="opp-2"><div class="opp-main"><img class="avatar" src="avatar-hanhan.png"><div class="side"><div class="oscore" data-p="2">含含 <b>0</b></div><div class="oflowers"></div></div></div><div class="backs"></div><div class="omelds"></div></article>
+<article class="opp o-left" id="opp-3"><div class="oscore" data-p="3">政政 <b>0</b></div><img class="avatar" src="avatar-zhengzheng.png"><div class="backs"></div><div class="omelds"></div><div class="oflowers"></div></article>
+   <div class="center-board">
+     <div class="dz dz-t" id="discards-2"></div>
+     <div class="dz dz-r" id="discards-1"></div>
+     <div class="dz dz-l" id="discards-3"></div>
+     <div class="dz dz-b" id="discards-0"></div>
+     <b id="turnLabel">正在洗牌</b>
+   </div>
+   <div id="actionBar" class="hint-bar" hidden></div>
+   <div class="hand-area">
+     <div class="my-score" id="myScore">林林 <b>0</b></div>
+     <p id="statusText">正在洗牌…</p>
+     <div class="hand-row">
+       <div class="hand-col">
+         <div id="myMelds" class="melds-row"></div>
+         <div id="hand" class="hand"></div>
+       </div>
+       <aside class="flower-rack"><small>补花</small><div id="flowerTiles"></div><small id="flowers">花 0</small></aside>
+     </div>
+   </div>
+ </section>
+ <!-- 前排课桌：牌桌下方 -->
+ <div class="front-classroom">
+   <div class="student-desk-row"><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div></div>
+ </div>
+ <div class="actions"><button id="newRound">重新开局</button></div>
+</main>
+<div id="modal"><div class="mbox pixel-border"><div id="modalBody"></div><div id="modalBtns"></div></div></div>
+<script src="engine.js"></script><script src="ui.js"></script><script src="net.js"></script><script src="app.js"></script>
+</body></html>

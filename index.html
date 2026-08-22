@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><title>鸡歪麻将厅</title><link rel="stylesheet" href="style.css?v=8"></head>
+<body class="cover-page"><main class="cover-wrap">
+  <div class="scanlines"></div><div class="cloud c1"></div><div class="cloud c2"></div>
+  <section class="cover-card pixel-border">
+    <p class="tiny">JINGAO PIXEL CLUB PRESENTS</p>
+    <h1>鸡歪麻将厅</h1>
+    <p class="tagline">锦高优秀学子养成计划 · 江山麻将</p>
+    <a class="start-btn" href="game.html?mode=8">单机 · 8盘一局 <span>▶</span></a><br>
+    <a class="start-btn alt" href="game.html?mode=ju">单机 · 局麻 30分起底 <span>▶</span></a>
+    <div class="net-entry">
+      <p class="tiny">想和好友联机？</p>
+      <input id="playerName" type="text" placeholder="你的昵称" maxlength="8" autocomplete="off">
+      <div class="mode-tabs">
+        <button class="mode-btn active" data-mode="local" title="本机启动 node server.js 后，同一台电脑游玩">本机</button>
+        <button class="mode-btn" data-mode="lan" title="同一 Wi-Fi/局域网内，自动检测本机 IP">局域网</button>
+        <button class="mode-btn" data-mode="remote" title="使用已部署的公网服务器，异地好友直接加入">异地</button>
+      </div>
+      <input id="remoteServer" type="text" placeholder="异地服务器地址，例如 wss://your-app.render.com" style="text-transform:none;display:none" autocomplete="off">
+      <p id="wsHint" class="ws-hint">服务器：ws://localhost:3001</p>
+      <input id="roomCode" type="text" placeholder="输入房间号" maxlength="8" autocomplete="off">
+      <a id="joinRoom" class="start-btn" href="#">加入房间</a><br>
+      <a id="createLocal" class="start-btn alt" href="#">本机开房间</a>
+      <a id="createLan" class="start-btn alt" href="#" style="display:none">局域网开房间</a>
+      <a id="createRemote" class="start-btn alt" href="#" style="display:none">异地开房间</a>
+    </div>
+    <p class="credit">Developed by Harry Jiang</p>
+    <script>
+      const roomIn=document.getElementById('roomCode'), joinBtn=document.getElementById('joinRoom'), nameIn=document.getElementById('playerName'), remoteIn=document.getElementById('remoteServer'), wsHint=document.getElementById('wsHint');
+      const createBtns={local:document.getElementById('createLocal'),lan:document.getElementById('createLan'),remote:document.getElementById('createRemote')};
+      const modeBtns=[...document.querySelectorAll('.mode-btn')];
+      let currentMode='local',wsUrl='ws://localhost:3001';
+      function randCode(){return Math.random().toString(36).slice(2,8).toUpperCase();}
+      function getName(){return encodeURIComponent((nameIn.value.trim()||'玩家').slice(0,8));}
+      function setMode(mode){
+        currentMode=mode;
+        modeBtns.forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+        remoteIn.style.display=mode==='remote'?'block':'none';
+        Object.values(createBtns).forEach(b=>b.style.display='none');
+        createBtns[mode].style.display='inline-block';
+        updateWs();
+      }
+      function getWsUrl(){return wsUrl;}
+      function updateWs(){
+        if(currentMode==='local'){wsUrl='ws://localhost:3001';}
+        else if(currentMode==='lan'){wsUrl='ws://'+location.hostname+':3001';}
+        else {
+          let u=remoteIn.value.trim()||localStorage.getItem('jw-remote-ws')||'';
+          if(u&&!/^wss?:\/\//i.test(u))u=(location.protocol==='https:'?'wss://':'ws://')+u;
+          wsUrl=u||'wss://example.render.com';
+        }
+        wsHint.textContent='服务器：'+wsUrl;
+      }
+      function createHref(){return 'game.html?v=8&mode=8&role=host&room='+randCode()+'&name='+getName()+'&ws='+encodeURIComponent(getWsUrl());}
+      function joinHref(){const code=roomIn.value.trim().toUpperCase();if(!code){alert('请输入房间号');return null;}return 'game.html?v=8&mode=8&role=client&room='+code+'&name='+getName()+'&ws='+encodeURIComponent(getWsUrl());}
+      createBtns.local.onclick=e=>{e.preventDefault();location.href=createHref();};
+      createBtns.lan.onclick=e=>{e.preventDefault();location.href=createHref();};
+      createBtns.remote.onclick=e=>{e.preventDefault();if(!remoteIn.value.trim()&&!localStorage.getItem('jw-remote-ws')){alert('请先填写异地服务器地址');remoteIn.focus();return;}localStorage.setItem('jw-remote-ws',getWsUrl());location.href=createHref();};
+      joinBtn.onclick=e=>{e.preventDefault();const h=joinHref();if(h)location.href=h;};
+      modeBtns.forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+      remoteIn.addEventListener('input',()=>{updateWs();localStorage.setItem('jw-remote-ws',remoteIn.value.trim());});
+      if(localStorage.getItem('jw-remote-ws'))remoteIn.value=localStorage.getItem('jw-remote-ws');
+      roomIn.addEventListener('keypress',e=>{if(e.key==='Enter')joinBtn.click();});
+      setMode('local');
+    </script>
+  </section>
+</main></body></html>

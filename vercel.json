@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "public": true,
+  "github": {
+    "enabled": true,
+    "autoAlias": true
+  }
+}

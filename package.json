@@ -1,0 +1,16 @@
+{
+  "name": "jw-mahjong-hall",
+  "version": "1.0.0",
+  "description": "鸡歪麻将厅 · 江山麻将像素风联机游戏",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-sim.js SIM_OK p8=8 ju=10"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,326 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=ZCOOL+KuaiLe&display=swap');
+*{box-sizing:border-box}body{margin:0;font-family:"Microsoft YaHei",sans-serif}
+.scanlines{position:fixed;inset:0;z-index:99;pointer-events:none;opacity:.10;background:repeating-linear-gradient(0deg,transparent 0 3px,#001 4px)}
+/* ---------- 封面 ---------- */
+.cover-page{overflow:hidden;background:#1b55ae}.cover-wrap{height:100vh;display:grid;place-items:center;position:relative;background:linear-gradient(#2778df77,#17336299),url('campus-cover.png') center/cover;overflow:hidden}.cover-wrap:before{content:"";position:absolute;inset:-8%;background:inherit;z-index:0;animation:bgScale 18s ease-in-out infinite alternate;will-change:transform}.cover-wrap:after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(#0000 80%,#09295a80),linear-gradient(90deg,#0001 1px,transparent 1px),linear-gradient(#0001 1px,transparent 1px);background-size:auto,8px 8px,8px 8px}
+.cover-card{position:relative;z-index:2;text-align:center;padding:2.5rem 3.8rem 2rem;background:#17305dce;box-shadow:10px 10px #08162f,0 0 0 5px #f4c65a;color:#ffefaa;animation:pop .85s cubic-bezier(.2,.8,.2,1) both;border:5px solid #f5d271;outline:4px solid #17345d}
+.tiny,.credit{font:10px 'Press Start 2P',monospace}.tiny{color:#a4e1ff}
+.cover-card h1{font-family:'ZCOOL KuaiLe';font-size:clamp(3rem,10vw,6.5rem);margin:.5rem 0;text-shadow:5px 5px #9e4735,-3px -3px #23326d}
+.tagline{font-size:1.1rem;color:#fff7d2}
+.start-btn,.actions button,.pixel-header button,.mbox button{display:inline-block;background:#f4c65a;color:#562e22;padding:1rem 1.4rem;border:0;box-shadow:5px 5px #0b1d3d;font-weight:bold;text-decoration:none;cursor:pointer}
+.start-btn{margin:.7rem .4rem}.start-btn.alt{background:#8fd0ff;box-shadow:5px 5px #12365e}
+.start-btn:hover,.actions button:hover{filter:brightness(1.08)}
+.credit{margin:1rem 0 0;color:#d2eeff}
+.net-entry{margin-top:1.2rem;padding-top:1rem;border-top:2px dashed #ffffff33}
+.net-entry input{display:block;margin:.35rem auto;background:#17305d;color:#ffefaa;border:3px solid #f4c65a;padding:.6rem .8rem;font-size:.9rem;text-align:center;text-transform:uppercase;width:min(220px,60vw)}
+.net-entry input#playerName{text-transform:none}
+.mode-tabs{display:flex;gap:6px;justify-content:center;margin:.4rem 0}
+.mode-btn{flex:1;max-width:90px;padding:.35rem .2rem;font-size:.72rem;background:#17305d;color:#9fd0ff;border:2px solid #4a7ab8;cursor:pointer;border-radius:6px}
+.mode-btn.active{background:#f4c65a;color:#562e22;border-color:#f4c65a;font-weight:bold}
+.ws-hint{font-size:.65rem;color:#9fd0ff;margin:.2rem 0}
+.net-entry .start-btn{display:inline-block;margin:.3rem .15rem;padding:.7rem .8rem;font-size:.78rem}
+.net-entry .start-btn{padding:.7rem 1rem;font-size:.8rem}
+/* 联机等待室四座位 */
+.seats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:1rem 0}
+.seat{width:96px;background:#214d75;border:3px solid #f3d576;border-radius:8px;padding:10px 5px;text-align:center;position:relative;transition:transform .15s}
+.seat.empty{opacity:.7;border-style:dashed;background:#1a3c5d}
+.seat.host{border-color:#ffd94d;background:#2a4a6f}
+.seat.me{box-shadow:0 0 0 3px #8fd0ff;transform:translateY(-3px)}
+.seat-avatar{width:44px;height:44px;margin:0 auto 8px;background:#17305d;border:3px solid #f3d576;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.35rem}
+.seat.empty .seat-avatar{font-size:1.6rem;color:#8fd0ff;background:#1a3c5d;border-style:dashed}
+.seat-name{font-weight:bold;color:#ffefaa;font-size:.82rem;margin-bottom:3px;word-break:break-all;min-height:1.1rem}
+.seat-status{font-size:.62rem;color:#9fd0ff}
+.seat-edit{margin-top:8px;padding:.25rem .5rem;font-size:.62rem;background:#f4c65a;color:#562e22;border:0;cursor:pointer;box-shadow:2px 2px #0b1d3d}
+.seat-edit:hover{filter:brightness(1.1)}
+.cloud{position:absolute;background:#fff9e9;width:145px;height:26px;animation:float 9s linear infinite}.cloud:before,.cloud:after{content:"";position:absolute;background:inherit}.cloud:before{width:55px;height:55px;left:24px;bottom:0}.cloud:after{width:74px;height:74px;right:18px;bottom:0}.c1{top:17%;left:6%}.c2{right:8%;top:28%;animation-delay:-4s}
+/* ---------- 牌厅页面：真实教室 ---------- */
+.game-page{min-height:100vh;overflow-x:hidden;background:#e8ddc2;color:#192840}
+.pixel-header{height:58px;background:#17305d;display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:4px solid #f4c65a;padding:0 3vw;position:relative;z-index:50;color:#fff}
+.pixel-header a{color:#dff5ff;text-decoration:none;font-size:.9rem}.pixel-header b{font-family:'ZCOOL KuaiLe';font-size:1.55rem;color:#ffdd7a}
+.pixel-header button{padding:.55rem;font-size:.75rem}
+#handNo{font-size:.8rem;color:#cfe8ff}
+.classroom{
+  min-height:calc(100vh - 58px);position:relative;display:flow-root;
+  background:
+    linear-gradient(180deg,#f7f0dd 0 12%,#e5d9b8 12% 100%),
+    repeating-linear-gradient(90deg,#00000005 0 2px,transparent 2px 80px),
+    repeating-linear-gradient(0deg,#00000005 0 2px,transparent 2px 80px);
+}
+/* 教室后墙透视：地板 */
+.classroom:before{
+  content:"";position:absolute;bottom:0;left:0;right:0;height:46%;
+  background:linear-gradient(180deg,#d4c29a 0%,#bda87a 100%);
+  transform-origin:bottom;transform:perspective(420px) rotateX(8deg) scale(1.12);
+  z-index:0;
+}
+/* 纱质怀旧蒙层 */
+.classroom:after{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(circle at 30% 20%,#fff7 0 8%,transparent 35%),radial-gradient(circle at 70% 60%,#fff6 0 6%,transparent 30%);
+  opacity:.35;
+  backdrop-filter:sepia(.18) contrast(.96) blur(.3px);
+}
+/* 黑板：教室正前方 */
+.blackboard{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:min(520px,52%);height:92px;padding:14px;background:#2d5e46;border:8px solid #8f6332;box-shadow:inset 0 0 0 3px #5a7f66,0 6px #5c3d1b;color:#f6edce;font:11px 'Press Start 2P',monospace;line-height:1.7;text-align:center;z-index:2}
+.blackboard small{font-size:7px;color:#d8ecc8}
+/* 老师讲台 + 像素老师 */
+.teacher{position:absolute;top:108px;left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:10px;white-space:nowrap}
+.teacher-figure{width:34px;height:54px;position:relative;flex:0 0 34px}
+.t-head{width:24px;height:24px;background:#f5cd9b;border:2px solid #8a5a32;position:absolute;top:0;left:5px}
+.t-head:before{content:"";position:absolute;top:2px;left:2px;right:2px;height:6px;background:#3a2618}
+.t-head:after{content:"";position:absolute;top:11px;left:5px;width:5px;height:3px;background:#3a2618;box-shadow:7px 0 0 #3a2618}
+.t-body{width:26px;height:28px;background:#4a6fa5;border:2px solid #2d4a70;position:absolute;top:24px;left:4px}
+.t-body:before{content:"";position:absolute;top:2px;left:10px;width:4px;height:14px;background:#c41e1e}
+.t-arm{width:8px;height:16px;background:#f5cd9b;border:2px solid #8a5a32;position:absolute;top:28px;left:-3px;transform:rotate(25deg);transform-origin:top center}
+.teacher-bubble{background:#5a3a1e;color:#fff5d6;padding:5px 14px;border:3px solid #f4c65a;font-size:.75rem;border-radius:4px;box-shadow:3px 3px #3d2613}
+.teacher-bubble span{display:inline-block;width:18px;height:18px;background:#f4c65a;color:#5a3a1e;text-align:center;line-height:18px;border-radius:50%;font-weight:bold;margin-right:6px}
+/* 窗户：左侧 */
+.window{position:absolute;top:24px;width:11%;height:96px;background:linear-gradient(90deg,#a9e6ff 0 46%,#e8ffff 46% 54%,#a9e6ff 54%);border:7px solid #936a3b;box-shadow:4px 4px #5c3d1b;z-index:2}
+.window:before{content:"";position:absolute;inset:45% 0; background:#936a3b;height:5px}
+.window:after{content:"";position:absolute;inset:0 46%; background:#936a3b;width:5px}
+.w1{left:4%}.w2{left:18%}
+/* 后排课桌和同学：放在老师讲台下方自然流中 */
+.back-classroom{position:relative;margin-top:225px;left:auto;right:auto;z-index:2;display:flex;flex-direction:column;align-items:center;gap:10px}
+.front-classroom{position:relative;left:auto;right:auto;bottom:auto;z-index:2;display:flex;justify-content:center;margin-top:18px;margin-bottom:16px}
+.student-desk-row{display:flex;justify-content:center;gap:clamp(10px,2.2vw,36px);flex-wrap:wrap;padding:0 4vw}
+.student{display:flex;flex-direction:column;align-items:center;gap:3px}
+.pixel-head{width:22px;height:22px;background:#f5cd9b;border:2px solid #8a5a32;position:relative}
+.pixel-head:before{content:"";position:absolute;top:4px;left:4px;right:4px;height:5px;background:#3a2618}
+.pixel-head:after{content:"";position:absolute;bottom:3px;left:6px;right:6px;height:3px;background:#c45e5e}
+.pixel-head.g{background:#9cc3e8}.pixel-head.b{background:#f5cd9b}
+.school-desk-mini{width:clamp(48px,7vw,90px);height:28px;background:#c79a5e;border:3px solid #7a4e26;box-shadow:0 4px #5c3d1b;position:relative}
+.school-desk-mini:before{content:"";position:absolute;left:6px;right:6px;top:4px;height:4px;background:#a0703a}
+.school-chair-mini{width:22px;height:10px;background:#7a4e26;margin:2px auto 0;border-radius:5px 5px 0 0;box-shadow:0 -6px 0 -1px #6f462f}
+/* 积分板 */
+/* 牌桌顶部信息条：挂在教室墙上，不压桌 */
+.table-meta{position:absolute;top:168px;left:50%;transform:translateX(-50%);z-index:12;display:flex;justify-content:center;align-items:flex-start;gap:10px;flex-wrap:wrap;width:fit-content;max-width:96vw}
+.game-info{position:relative;width:fit-content;max-width:min(420px,90vw);display:flex;justify-content:center;align-items:center;gap:12px;background:#1d456cdd;border:3px solid #f3d576;color:#fff;padding:.4rem .95rem;font-size:.82rem;z-index:10;border-radius:6px;box-shadow:0 6px 12px #0b1d3d55}
+.wealth-box{display:flex;align-items:center;gap:8px}
+.wealth-box small{font-size:.65rem;color:#9fd0ff}
+.wealth-box .mtile{width:28px;height:40px;border-radius:3px}
+.wealth-box .mtile .wan .num{font-size:14px}
+.wealth-box .mtile .wan .suit{font-size:13px}
+.wealth-box .mtile .tiao{display:grid;grid-template-columns:repeat(3,4px);gap:1px;place-content:center}
+.wealth-box .mtile .tiao.bird{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
+.wealth-box .mtile .tiao.bird svg{width:86%;height:86%}
+.wealth-box .mtile .tiao i{height:12px;width:4px;background:#2a9a62;border-radius:3px;box-shadow:0 4px #e1c341}
+.wealth-box .mtile .tong{display:grid;grid-template-columns:repeat(3,6px);gap:2px;justify-content:center;align-content:center}
+.wealth-box .mtile .tong i{height:6px;width:6px;border:2px solid #226d65;border-radius:50%;background:#e94e45;box-shadow:inset 0 0 0 1px #fff}
+.wealth-box .mtile .feng,.wealth-box .mtile .zhong,.wealth-box .mtile .fa{font-size:16px}
+.wealth-box .mtile .bai{width:18px;height:26px}
+.wealth-box .mtile .bai i{width:11px;height:15px}
+.dice-box{font-size:22px;letter-spacing:2px;text-shadow:2px 2px #0b1d3d;background:#0b1d3d88;padding:2px 10px;border-radius:4px}
+/* 各人分数牌 */
+.oscore,.my-score{background:#17305dee;border:2px solid #f3d576;color:#ffefaa;padding:.25rem .55rem;font-size:.75rem;border-radius:12px;font-weight:bold;white-space:nowrap;text-shadow:1px 1px #183557;box-shadow:2px 2px #0b1d3d}
+.oscore.on,.my-score.on{background:#7a4b16;border-color:#ffd94d;box-shadow:0 0 0 2px #ffd94d55}
+.oscore b,.my-score b{color:#ffd94d;margin-left:2px}
+.oscore i,.my-score i{font-style:normal;color:#9fe8ff;font-size:.6rem;margin-left:3px}
+.my-score{position:absolute;top:-30px;left:6px;z-index:15}
+/* 牌桌：四张课桌拼成，自然流排在教室中后部 */
+.desk-table{margin:10px auto 24px;width:min(1000px,94vw);height:min(64vh,620px);min-height:500px;position:relative;isolation:isolate;z-index:10;overflow:hidden}
+.desk{position:absolute;background:#c88e48;border:5px solid #70401e;box-shadow:inset 0 0 0 3px #f0c77b,5px 5px #5e371d;z-index:0}
+.d-top,.d-bottom{width:58%;height:34%;left:21%}.d-top{top:4%}.d-bottom{bottom:2%;left:50%;transform:translateX(-50%)}
+.d-left,.d-right{width:32%;height:34%;top:33%}.d-left{left:4%}.d-right{right:4%}
+/* 桌缝/拼接感 */
+.desk:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,#00000008 0 2px,transparent 2px 10px)}
+/* 对手座位 */
+.opp{position:absolute;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:12;text-align:center}
+.opp .avatar{width:64px;height:80px;object-fit:cover;border:4px solid #f3d576;box-shadow:3px 3px #0b1d3d;background:#17305d;image-rendering:pixelated;clip-path:polygon(15% 0,85% 0,100% 15%,100% 85%,85% 100%,15% 100%,0 85%,0 15%)}
+.opp.active .avatar{outline:3px solid #ffd94d;outline-offset:2px}
+.oflowers{font-size:.65rem;color:#ffdf78;text-shadow:1px 1px #183557}
+.o-top{top:-18px;left:50%;transform:translateX(-50%);flex-direction:row;flex-wrap:wrap;gap:4px;max-width:72%;justify-content:center}
+.o-top .opp-main{display:flex;flex-direction:row;align-items:center;gap:10px}
+.o-top .backs,.o-top .omelds{width:100%}
+.o-top .omelds{margin-top:2px;min-height:36px;align-items:flex-start}
+.o-right{right:10px;top:50%;transform:translateY(-50%);max-width:110px}
+.o-left{left:10px;top:50%;transform:translateY(-50%);max-width:110px}
+.o-top .side{display:flex;flex-direction:column;align-items:center;gap:2px}
+.o-top .oscore{margin-bottom:2px}
+.o-left .oscore,.o-right .oscore{margin:3px 0}
+.backs{display:flex;flex-wrap:wrap;gap:1px;justify-content:center;max-width:110px}
+.tile.back{width:13px;height:19px;flex:0 0 13px;border:1px solid #101d3d;border-radius:1px;background:repeating-linear-gradient(45deg,#28508f 0 3px,#1c3a6b 3px 6px);box-shadow:none;cursor:default}
+.omelds{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;max-width:116px}
+/* 中央弃牌区 */
+.center-board{position:absolute;inset:16% 24% 26% 24%;background:#2c6a4ecc;border:3px solid #1d4b34;border-radius:8px;box-shadow:inset 0 0 24px #10331f;z-index:5;overflow:hidden}
+.center-board b{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#17305d;border:2px solid #f3d576;color:#ffefaa;font-size:.8rem;padding:.3rem .8rem;white-space:nowrap;z-index:6}
+.dz{position:absolute;display:flex;flex-wrap:wrap;gap:2px;overflow:hidden;align-content:flex-start}
+.dz-t{top:34px;left:50%;transform:translateX(-50%);width:54%;justify-content:center;max-height:60px}
+.dz-b{bottom:4px;left:50%;transform:translateX(-50%);width:62%;justify-content:center}
+.dz-l{left:5px;top:50%;transform:translateY(-50%);width:32%;max-height:150px}
+.dz-r{right:5px;top:50%;transform:translateY(-50%);width:32%;max-height:150px}
+/* 动作条 */
+.hint-bar{position:absolute;z-index:18;left:50%;top:60%;transform:translateX(-50%);display:flex;gap:6px;justify-content:center;flex-wrap:wrap;min-width:200px}
+.hint-bar button{background:#ffdf78;border:3px solid #714020;color:#4c291a;font-weight:bold;padding:.45rem .8rem;box-shadow:3px 3px #234666;cursor:pointer;font-size:.9rem}
+.hint-bar button:first-child{background:#ff9170}
+.hint-bar button.warn{background:#ff4d4d;color:#fff;border-color:#8a1c1c;box-shadow:3px 3px #521010;animation:pulseWarn 1.2s infinite}
+/* 手牌区 */
+.hand-area{position:absolute;bottom:4%;left:50%;transform:translateX(-50%);width:100%;max-width:100%;padding:0 14px;text-align:center;z-index:14}
+.hand-area p{margin:.2rem;font-size:.85rem;text-shadow:2px 2px #16305d;color:#fff}
+.hand-row{display:flex;align-items:flex-end;justify-content:center;gap:8px;max-width:100%}
+.hand-col{display:flex;flex-direction:column;align-items:center;gap:4px;max-width:calc(100% - 70px)}
+.melds-row{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;min-height:0;max-width:100%}
+.meld{display:inline-flex;gap:1px;background:#1d456c99;padding:2px;border:1px solid #f3d57666;border-radius:3px}
+.flower-rack{flex:0 0 64px;min-height:76px;background:#20496ccc;border:2px solid #f3d576;color:#fff;padding:3px;align-self:flex-end}
+.flower-rack small{display:block;color:#ffdf78;font-size:.65rem}
+.flower-rack #flowerTiles{display:flex;flex-wrap:wrap;gap:1px}
+.hand{display:flex;justify-content:center;gap:2px;overflow-x:auto;padding:6px;max-width:100%}
+.tile{width:42px;height:64px;flex:0 0 42px;position:relative;display:inline-flex;align-items:center;justify-content:center;border:3px solid #9a6b37;border-radius:3px;box-shadow:2px 3px #643c24;background:#fffbea;font-family:serif;font-size:0;cursor:pointer}
+button.tile{padding:0}
+.tile:hover{transform:translateY(-8px)}
+.tile.wealth{background:#fff1a9;box-shadow:2px 3px #643c24,0 0 8px #ffd94d99}
+.tile .wan{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;font-size:0;font-weight:bold;line-height:1}
+.tile .wan .num{font-size:22px;font-style:normal;color:#1a1a1a}
+.tile .wan .suit{font-size:20px;font-style:normal;color:#c41e1e}
+.tile .tiao{display:grid;grid-template-columns:repeat(3,5px);gap:2px;place-content:center}
+.tile .tiao.bird{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
+.tile .tiao.bird svg{width:78%;height:78%}
+.tile .tiao i{height:16px;width:5px;background:#2a9a62;border-radius:4px;box-shadow:0 5px #e1c341}
+.tile .tong{display:grid;grid-template-columns:repeat(3,9px);gap:3px;justify-content:center;align-content:center}
+.tile .tong i{height:9px;width:9px;border:2px solid #226d65;border-radius:50%;background:#e94e45;box-shadow:inset 0 0 0 1px #fff}
+.tile .feng,.tile .zhong,.tile .fa{font-size:26px;font-weight:bold}
+.tile .feng{color:#2a4f6c}
+.tile .zhong{color:#c41e1e;text-shadow:0 0 1px #8b0000}
+.tile .fa{color:#2a8a2a;text-shadow:0 0 1px #004d00}
+.tile .bai{width:28px;height:38px;border:3px solid #1a1a1a;background:#f7f7f7;display:flex;align-items:center;justify-content:center}
+.tile .bai i{width:18px;height:24px;border:2px solid #1a1a1a;background:#fff}
+/* 小牌面（副露/弃牌/弹窗） */
+.mtile,.dtile,.ftile{position:relative;display:inline-flex;align-items:center;justify-content:center;background:#fffbea;border:2px solid #9a6b37;border-radius:2px;font-size:0;flex:0 0 auto;vertical-align:middle}
+.mtile{width:23px;height:33px}.dtile{width:21px;height:29px}.ftile{width:21px;height:31px;padding:0;overflow:hidden}
+.mtile.gold,.dtile.gold{box-shadow:0 0 0 2px #ffd94d;background:#fff3c4}
+.hua{display:block;width:100%;height:100%}
+.hua text{font-family:Arial,sans-serif}
+.mtile .wan,.dtile .wan,.ftile .wan{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;font-size:0;font-weight:bold;line-height:1}
+.mtile .wan .num,.dtile .wan .num,.ftile .wan .num{font-size:11px;font-style:normal;color:#1a1a1a}
+.mtile .wan .suit,.dtile .wan .suit,.ftile .wan .suit{font-size:10px;font-style:normal;color:#c41e1e}
+.mtile .tiao,.dtile .tiao{display:grid;grid-template-columns:repeat(3,3px);gap:1px;place-content:center}
+.mtile .tiao.bird,.dtile .tiao.bird{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
+.mtile .tiao.bird svg,.dtile .tiao.bird svg{width:82%;height:82%}
+.mtile .tiao i,.dtile .tiao i{height:9px;width:3px;background:#2a9a62;border-radius:2px;box-shadow:0 3px #e1c341}
+.mtile .tong,.dtile .tong{display:grid;grid-template-columns:repeat(3,5px);gap:1px;justify-content:center;align-content:center}
+.mtile .tong i,.dtile .tong i{height:5px;width:5px;border:1px solid #226d65;border-radius:50%;background:#e94e45;box-shadow:inset 0 0 0 1px #fff}
+.mtile .feng,.ftile .feng,.mtile .zhong,.ftile .zhong,.mtile .fa,.ftile .fa{font-size:12px;font-weight:bold}.dtile .feng,.dtile .zhong,.dtile .fa{font-size:11px;font-weight:bold}
+.mtile .feng,.dtile .feng,.ftile .feng{color:#2a4f6c}
+.mtile .zhong,.dtile .zhong,.ftile .zhong{color:#c41e1e}
+.mtile .fa,.dtile .fa,.ftile .fa{color:#2a8a2a}
+.mtile .bai,.dtile .bai,.ftile .bai{width:14px;height:20px;border:2px solid #1a1a1a;background:#f7f7f7;display:flex;align-items:center;justify-content:center}
+.mtile .bai i,.dtile .bai i,.ftile .bai i{width:9px;height:12px;border:1px solid #1a1a1a;background:#fff}
+/* 弹窗 */
+#modal{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:#09142899}
+#modal.show{display:flex}
+.mbox{background:#17305d;border:5px solid #f4c65a;outline:4px solid #0b1d3d;box-shadow:8px 8px #08162f;color:#ffefaa;padding:1.4rem 1.8rem;max-width:min(560px,92vw);max-height:84vh;overflow:auto;text-align:center}
+.mbox h3{font-family:'ZCOOL KuaiLe';font-size:1.6rem;margin:.2rem 0 .8rem;color:#ffd94d;text-shadow:3px 3px #08162f}
+.mbox p{color:#cfe8ff;font-size:.9rem}
+.wintiles{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin:.6rem 0;align-items:center}
+.mtable{margin:.6rem auto;border-collapse:collapse}
+.mtable th,.mtable td{border:1px solid #ffffff2b;padding:4px 12px;font-size:.85rem}
+.mtable th{color:#9fd0ff}.mtable .sum td{color:#ffd94d;font-weight:bold}
+.mtable .champ td{color:#ffd94d;font-weight:bold}
+#modalBtns{margin-top:1rem;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#modalBtns button{padding:.7rem 1.2rem}
+.actions{text-align:center;margin:8px;position:relative;z-index:20}
+.actions button{background:#214d75;color:#fff0b1;border:3px solid #f3d576}
+.actions button:hover{box-shadow:3px 3px #4f2c1d}
+@keyframes pop{from{transform:translateY(40px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+@keyframes bgScale{from{transform:scale(1)}to{transform:scale(1.08)}}
+@keyframes pulseWarn{0%,100%{box-shadow:0 0 0 0 rgba(255,77,77,.55)}50%{box-shadow:0 0 0 6px rgba(255,77,77,0)}}
+@keyframes float{to{transform:translateX(80vw)}}
+@media(max-width:700px){
+  .cover-card{padding:2rem 1.2rem}
+  .blackboard{left:2%;width:90%;height:80px;padding:10px;top:10px}
+  .window{width:18%;height:70px;top:14px}.w1{left:2%}.w2{left:24%}
+  .back-classroom{margin-top:200px}
+  .desk-row{display:none}
+  .game-info{font-size:.7rem}.dice-box{font-size:18px}
+  .desk-table{min-height:500px;height:72vh;margin:6px auto 16px}
+  .opp img,.opp .avatar{width:48px;height:60px}
+  .o-left{left:2px}.o-right{right:2px}
+  .center-board{inset:13% 19% 30% 19%}
+  .dz-l,.dz-r{width:30%}
+  .hand-area{width:98%;bottom:2%}
+  .tile{width:33px;height:52px;flex:0 0 33px}
+  .tile .wan .num{font-size:15px}.tile .wan .suit{font-size:13px}
+  .tile .feng,.tile .zhong,.tile .fa{font-size:20px;line-height:46px}
+  .tile .tiao{grid-template-columns:repeat(3,4px)}.tile .tiao i{height:12px;width:4px}
+  .tile .bai{width:22px;height:30px}.tile .bai i{width:14px;height:18px}
+  .hint-bar{top:58%}
+  .flower-rack{flex-basis:52px}
+  .pixel-header b{font-size:1.1rem}.pixel-header a{font-size:.7rem}.pixel-header button{font-size:.6rem}
+}
+/* ---------- 手机适配：竖屏提示（JS 控制 .show）+ 横屏紧凑布局 ---------- */
+#rotateTip{display:none}
+#rotateTip.show{display:flex;position:fixed;inset:0;z-index:300;background:#0b1d3df2;color:#ffefaa;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px}
+#rotateTip .ph{font-size:3.2rem;animation:rotHint 2.2s ease-in-out infinite}
+#rotateTip b{font-family:'ZCOOL KuaiLe';font-size:1.6rem;color:#ffd94d}
+#rotateTip small{color:#9fd0ff}
+#rotateTip #tipGo{margin-top:14px;padding:.5rem 1.1rem;font-family:inherit;font-size:.85rem;background:#1d3f6e;color:#ffefaa;border:2px solid #f3d576;border-radius:6px;cursor:pointer}
+#rotateTip #tipGo:active{transform:scale(.96)}
+@keyframes rotHint{0%,20%{transform:rotate(0)}55%,100%{transform:rotate(90deg)}}
+/* ---------- 手机模式：JS 检测 UA/屏幕后加 .mobile-mode，不依赖 CSS orientation 查询 ---------- */
+body.mobile-mode{overflow:hidden;background:#e8ddc2}
+body.mobile-mode .pixel-header,
+body.mobile-mode .blackboard,
+body.mobile-mode .teacher,
+body.mobile-mode .window,
+body.mobile-mode .back-classroom,
+body.mobile-mode .front-classroom,
+body.mobile-mode .actions,
+body.mobile-mode .scanlines,
+body.mobile-mode #rotateTip{display:none !important}
+body.mobile-mode .classroom{min-height:100vh;background:#e8ddc2;overflow:hidden}
+body.mobile-mode .classroom:before{height:52%;transform-origin:bottom;transform:perspective(360px) rotateX(8deg) scale(1.08)}
+body.mobile-mode .classroom:after{opacity:.25}
+/* 顶部信息条（财神/牌墙/骰子）固定在屏幕顶部 */
+body.mobile-mode .table-meta{
+  display:flex !important;
+  position:fixed;top:2px;left:50%;transform:translateX(-50%);z-index:20;
+}
+body.mobile-mode .game-info{font-size:.52rem;padding:.15rem .4rem;gap:4px;max-width:min(360px,92vw)}
+body.mobile-mode .wealth-box{gap:4px}
+body.mobile-mode .wealth-box .mtile{width:14px;height:21px}
+body.mobile-mode .wealth-box .mtile .wan .num{font-size:9px}
+body.mobile-mode .wealth-box .mtile .wan .suit{font-size:8px}
+body.mobile-mode .dice-box{font-size:14px;padding:1px 5px}
+body.mobile-mode .o-top{top:44px;max-width:60%;gap:2px}
+body.mobile-mode .o-top .avatar{width:48px;height:60px}
+body.mobile-mode .o-top .oscore{font-size:.55rem;padding:.1rem .35rem}
+body.mobile-mode .o-top .omelds{min-height:28px}
+body.mobile-mode .dz-t{top:86px;max-height:48px;width:50%}
+/* 网络状态在手机端显示在信息条右侧 */
+body.mobile-mode #netStatus{position:fixed;top:4px;right:4px;font-size:.5rem;color:#9fd0ff;z-index:21;background:#0b1d3d88;padding:1px 4px;border-radius:3px;max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 牌桌固定居中，JS 计算 scale 缩放铺满屏幕 */
+body.mobile-mode .desk-table{
+  position:fixed !important;top:50% !important;left:50% !important;
+  width:1000px !important;height:640px !important;min-height:auto !important;
+  margin:0 !important;max-width:none !important;z-index:10;
+  transform-origin:center center;
+}
+/* ---------- 旧版 CSS 媒体查询保留做兜底 ---------- */
+@media(max-width:920px) and (orientation:landscape){
+  body.game-page{overflow:hidden}
+  .pixel-header,.blackboard,.teacher,.window,.back-classroom,.front-classroom,.actions{display:none}
+  .desk-table{
+    position:fixed;top:50%;left:50%;width:1000px;height:640px;min-height:auto;
+    margin:0;max-width:none;z-index:10;
+    transform-origin:center center
+  }
+  .table-meta{display:none}
+  .opp .avatar{width:48px;height:60px}
+  .o-left{left:10px}.o-right{right:10px}
+  .oscore{font-size:.62rem;padding:.15rem .4rem}
+  .backs .tile.back{width:10px;height:16px;flex-basis:10px}
+  .mtile{width:20px;height:28px}.dtile{width:18px;height:24px}
+  .center-board{inset:14% 22% 28% 22%}
+  .hand-area{bottom:3%;width:100%}
+  .hand{gap:1px;padding:3px}
+  .tile{width:34px;height:52px;flex:0 0 34px;border-width:2px}
+  .tile .wan .num{font-size:15px}.tile .wan .suit{font-size:14px}
+  .tile .feng,.tile .zhong,.tile .fa{font-size:18px;line-height:46px}
+  .tile .tiao{grid-template-columns:repeat(3,4px)}.tile .tiao i{height:12px;width:4px}
+  .tile .tong{grid-template-columns:repeat(3,7px)}.tile .tong i{height:7px;width:7px}
+  .tile .bai{width:22px;height:32px}.tile .bai i{width:15px;height:21px}
+  .flower-rack{flex-basis:48px;min-height:60px}
+  .hint-bar{top:56%}
+  .hint-bar button{padding:.35rem .65rem;font-size:.78rem}
+  .my-score{top:-24px;font-size:.65rem}
+  .mbox{padding:1rem 1.1rem}
+}
