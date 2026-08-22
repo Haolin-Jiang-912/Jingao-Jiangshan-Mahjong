@@ -101,7 +101,34 @@ function onHandClick(i){
   if(t===G.h.wealth&&!G.h.warnWealth){G.h.warnWealth=true;note('⚠ 财神是百搭！再点一次确认打出 —— 若已财吊（听全牌）打出即「飘财」，胡牌翻倍');setTimeout(()=>{if(G)G.h.warnWealth=false},4000);return}
   doDiscard(0,i);
 }
-$('#hand').addEventListener('click',e=>{
+/* 鼠标/触屏出牌：按下先高亮，短点击才出牌，拖动超过阈值不误触 */
+const handPointer={id:null,index:-1,x:0,y:0,moved:false,suppressClick:false};
+const handEl=$('#hand');
+handEl.addEventListener('pointerdown',e=>{
+  const b=e.target.closest('[data-i]');if(!b)return;
+  handPointer.id=e.pointerId;handPointer.index=+b.dataset.i;handPointer.x=e.clientX;handPointer.y=e.clientY;handPointer.moved=false;
+  b.classList.add('selected');
+  try{handEl.setPointerCapture(e.pointerId)}catch{}
+});
+handEl.addEventListener('pointermove',e=>{
+  if(handPointer.id!==e.pointerId)return;
+  if(Math.hypot(e.clientX-handPointer.x,e.clientY-handPointer.y)>8){
+    handPointer.moved=true;
+    const b=handEl.querySelector(`[data-i="${handPointer.index}"]`);if(b)b.classList.remove('selected');
+  }
+});
+handEl.addEventListener('pointerup',e=>{
+  if(handPointer.id!==e.pointerId)return;
+  const idx=handPointer.index,moved=handPointer.moved;
+  const b=handEl.querySelector(`[data-i="${idx}"]`);if(b)b.classList.remove('selected');
+  handPointer.id=null;handPointer.index=-1;handPointer.moved=false;
+  if(!moved){handPointer.suppressClick=true;onHandClick(idx);setTimeout(()=>{handPointer.suppressClick=false},0)}
+});
+handEl.addEventListener('pointercancel',()=>{
+  handEl.querySelector('.selected')?.classList.remove('selected');handPointer.id=null;handPointer.index=-1;handPointer.moved=false;
+});
+handEl.addEventListener('click',e=>{
+  if(handPointer.suppressClick){e.preventDefault();return}
   const b=e.target.closest('[data-i]');if(!b)return;
   onHandClick(+b.dataset.i);
 });
@@ -395,8 +422,8 @@ else if(Net.isHost){
   $('#newRound').style.display='none';
 }
 if($('#newRound').style.display!=='none')$('#newRound').onclick=()=>{clearTimeout(aiTimer);startHand()};
-$('#musicBtn').onclick=()=>{musicOn=!musicOn;if(musicOn){if(localSource==='bgm')startLocalAudio('bgm.mp3','bgm');else if(localSource==='upload'){if(localAudio)localAudio.play().catch(()=>{});else $('#uploadMusic').click()}else music();}else stopMusic()};
-document.addEventListener('pointerdown',()=>{if(musicOn&&!localAudio)startLocalAudio('bgm.mp3','bgm')},{once:true});
+$('#musicBtn').onclick=()=>{musicOn=!musicOn;if(musicOn){if(localSource==='upload'){if(localAudio)localAudio.play().catch(()=>{});else $('#uploadMusic').click()}else startPlaylistAudio()}else stopMusic()};
+document.addEventListener('pointerdown',()=>{if(musicOn&&!localAudio)startPlaylistAudio()},{once:true});
 /* 允许用户上传本地 MP3 作为背景乐 */
 if(!$('#localMp3')){
   const f=document.createElement('input');f.type='file';f.id='localMp3';f.accept='audio/*';f.style.display='none';

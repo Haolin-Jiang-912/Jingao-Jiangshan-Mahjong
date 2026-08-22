@@ -88,8 +88,13 @@ function showModal(html,btns){
   $('#modal').classList.add('show');
 }
 function note(x){$('#statusText').textContent=x}
-/* 像素音效 + 背景音乐（默认 bgm.mp3，也可上传本地 MP3 或切回像素电台） */
-let audio,loop,musicOn=true,localAudio=null,localSource='bgm';
+/* 像素音效 + 背景音乐：三首网页 MP3 随机播放，也可上传本地 MP3 */
+let audio,loop,musicOn=true,localAudio=null,localSource='playlist',bgmIndex=-1;
+const BGM_TRACKS=[
+  {src:'bgm-1.mp3',name:'像素晴天'},
+  {src:'bgm-2.mp3',name:'随机曲目 2'},
+  {src:'bgm-3.mp3',name:'随机曲目 3'}
+];
 const TRACKS=[
   {name:'像素晴天',notes:[523,659,784,880,784,659,587,659,698,784,1046,784],beat:220},
   {name:'课间小调',notes:[392,440,494,523,494,440,392,440,494,523,587,523],beat:260},
@@ -98,10 +103,29 @@ const TRACKS=[
 function beep(f,d=.18){if(!audio||!musicOn||localAudio)return;const o=audio.createOscillator(),g=audio.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.032,audio.currentTime);g.gain.exponentialRampToTimeAtTime(.001,audio.currentTime+d);o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+d)}
 function music(){if(localAudio)return;audio??=new AudioContext();audio.resume();clearInterval(loop);const t=TRACKS[trackIdx];let i=0;loop=setInterval(()=>{beep(t.notes[i++%t.notes.length],t.beat/1200)},t.beat)}
 function nextTrack(){trackIdx=(trackIdx+1)%TRACKS.length;if(musicOn&&!localAudio){music();note('🎵 '+TRACKS[trackIdx].name+'（像素电台，上传本地 MP3 可听流行乐）')}}
-function startLocalAudio(src,label='bgm'){
+function pickBgmIndex(){
+  if(BGM_TRACKS.length<2)return 0;
+  let i=Math.floor(Math.random()*BGM_TRACKS.length);
+  while(i===bgmIndex)i=Math.floor(Math.random()*BGM_TRACKS.length);
+  return i;
+}
+function startPlaylistAudio(){
+  if(!musicOn)return;
   if(localAudio){localAudio.pause();localAudio=null}
+  clearInterval(loop);
+  const idx=pickBgmIndex(),track=BGM_TRACKS[idx];bgmIndex=idx;
+  const player=new Audio(track.src);player.preload='auto';player.loop=false;player.volume=.45;
+  player.onended=()=>{if(musicOn&&localAudio===player){localAudio=null;startPlaylistAudio()}};
+  localAudio=player;localSource='playlist';
+  if(typeof $!=='undefined'&&$('#musicBtn'))$('#musicBtn').textContent='♫ 随机音乐：'+track.name;
+  player.play().catch(()=>{});
+}
+function startLocalAudio(src,label='upload'){
+  if(label==='bgm'||label==='playlist'){startPlaylistAudio();return}
+  if(localAudio){localAudio.pause();localAudio=null}
+  clearInterval(loop);
   localAudio=new Audio(src);localAudio.loop=true;localAudio.volume=.45;localAudio.play().catch(()=>{});
-  localSource=label;clearInterval(loop);if(typeof $!=='undefined'&&$('#musicBtn'))$('#musicBtn').textContent='♫ '+(label==='bgm'?'背景音乐':'本地音乐')+'：开';
+  localSource=label;if(typeof $!=='undefined'&&$('#musicBtn'))$('#musicBtn').textContent='♫ 本地音乐：开';
 }
 function stopMusic(){if(localAudio){localAudio.pause();localAudio=null}if(typeof $!=='undefined'&&$('#musicBtn'))$('#musicBtn').textContent='♫ 音乐：关';clearInterval(loop)}
 function sfx(kind){const m={draw:[660,.09],discard:[330,.07],peng:[392,.12],gang:[262,.16],win:[784,.3],dice:[520,.05]};const x=m[kind];if(x)beep(x[0],x[1])}

@@ -144,10 +144,10 @@
 .center-board{position:absolute;inset:16% 24% 26% 24%;background:#2c6a4ecc;border:3px solid #1d4b34;border-radius:8px;box-shadow:inset 0 0 24px #10331f;z-index:5;overflow:hidden}
 .center-board b{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#17305d;border:2px solid #f3d576;color:#ffefaa;font-size:.8rem;padding:.3rem .8rem;white-space:nowrap;z-index:6}
 .dz{position:absolute;display:flex;flex-wrap:wrap;gap:2px;overflow:hidden;align-content:flex-start}
-.dz-t{top:34px;left:50%;transform:translateX(-50%);width:54%;justify-content:center;max-height:60px}
-.dz-b{bottom:4px;left:50%;transform:translateX(-50%);width:62%;justify-content:center}
-.dz-l{left:5px;top:50%;transform:translateY(-50%);width:32%;max-height:150px}
-.dz-r{right:5px;top:50%;transform:translateY(-50%);width:32%;max-height:150px}
+.dz-t{top:30px;left:50%;transform:translateX(-50%);width:62%;justify-content:center;max-height:78px;align-content:center}
+.dz-b{bottom:8px;left:50%;transform:translateX(-50%);width:70%;justify-content:center;align-content:center}
+.dz-l{left:12px;top:50%;transform:translateY(-50%);width:37%;max-height:174px;align-content:center}
+.dz-r{right:12px;top:50%;transform:translateY(-50%);width:37%;max-height:174px;align-content:center}
 /* 动作条 */
 .hint-bar{position:absolute;z-index:18;left:50%;top:60%;transform:translateX(-50%);display:flex;gap:6px;justify-content:center;flex-wrap:wrap;min-width:200px}
 .hint-bar button{background:#ffdf78;border:3px solid #714020;color:#4c291a;font-weight:bold;padding:.45rem .8rem;box-shadow:3px 3px #234666;cursor:pointer;font-size:.9rem}
@@ -185,7 +185,7 @@ button.tile{padding:0}
 .tile .bai i{width:18px;height:24px;border:2px solid #1a1a1a;background:#fff}
 /* 小牌面（副露/弃牌/弹窗） */
 .mtile,.dtile,.ftile{position:relative;display:inline-flex;align-items:center;justify-content:center;background:#fffbea;border:2px solid #9a6b37;border-radius:2px;font-size:0;flex:0 0 auto;vertical-align:middle}
-.mtile{width:23px;height:33px}.dtile{width:21px;height:29px}.ftile{width:21px;height:31px;padding:0;overflow:hidden}
+.mtile{width:23px;height:33px}.dtile{width:26px;height:36px}.ftile{width:21px;height:31px;padding:0;overflow:hidden}
 .mtile.gold,.dtile.gold{box-shadow:0 0 0 2px #ffd94d;background:#fff3c4}
 .hua{display:block;width:100%;height:100%}
 .hua text{font-family:Arial,sans-serif}
@@ -198,7 +198,7 @@ button.tile{padding:0}
 .mtile .tiao i,.dtile .tiao i{height:9px;width:3px;background:#2a9a62;border-radius:2px;box-shadow:0 3px #e1c341}
 .mtile .tong,.dtile .tong{display:grid;grid-template-columns:repeat(3,5px);gap:1px;justify-content:center;align-content:center}
 .mtile .tong i,.dtile .tong i{height:5px;width:5px;border:1px solid #226d65;border-radius:50%;background:#e94e45;box-shadow:inset 0 0 0 1px #fff}
-.mtile .feng,.ftile .feng,.mtile .zhong,.ftile .zhong,.mtile .fa,.ftile .fa{font-size:12px;font-weight:bold}.dtile .feng,.dtile .zhong,.dtile .fa{font-size:11px;font-weight:bold}
+.mtile .feng,.ftile .feng,.mtile .zhong,.ftile .zhong,.mtile .fa,.ftile .fa{font-size:12px;font-weight:bold}.dtile .feng,.dtile .zhong,.dtile .fa{font-size:14px;font-weight:bold}
 .mtile .feng,.dtile .feng,.ftile .feng{color:#2a4f6c}
 .mtile .zhong,.dtile .zhong,.ftile .zhong{color:#c41e1e}
 .mtile .fa,.dtile .fa,.ftile .fa{color:#2a8a2a}
@@ -333,3 +333,15 @@ body.mobile-mode .desk-table{
 .tile:hover{transform:none}
 @media (hover:hover){.tile:hover{transform:translateY(-8px)}}
 @media (max-width:700px){.melds-row{min-height:58px;padding:2px 0}.hand{min-height:56px}}
+
+/* 出牌交互反馈：短按确认，拖动时取消选中，避免误出牌 */
+.hand .tile{touch-action:none;transition:transform .12s ease,box-shadow .12s ease,filter .12s ease}
+.hand .tile.selected{transform:translateY(-12px);filter:brightness(1.08);box-shadow:2px 4px #643c24,0 0 0 3px #ffd94d,0 0 14px #ffd94d99}
+.hand .tile:focus-visible{outline:3px solid #9fd0ff;outline-offset:2px}
+@media(max-width:700px){
+  .dtile{width:23px;height:32px}
+  .dz-t{top:26px;width:66%;max-height:68px}
+  .dz-b{bottom:6px;width:74%}
+  .dz-l{left:8px;width:39%;max-height:156px}
+  .dz-r{right:8px;width:39%;max-height:156px}
+}
