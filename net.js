@@ -12,7 +12,7 @@
     humanSeats:[true,false,false,false],
     myName:'玩家',
     onMessage:null,
-    msgQueue:[],
+    msgQueue:[],_outbox:[],
     diag:{ws:'初始化中',state:'-',lastIn:'-',lastOut:'-',seqIn:0,seqOut:0,err:''},
 
     log(m){console.log('[Net]',m);},
@@ -80,7 +80,7 @@
         return;
       }
       let opened=false;
-      this.ws.onopen=()=>{opened=true;this.diag.ws='已连接';this.updateDiag();};
+      this.ws.onopen=()=>{opened=true;this.diag.ws='已连接';this.updateDiag();const q=this._outbox.splice(0);q.forEach(m=>this.sendRaw(m));};
       this.ws.onmessage=(ev)=>{
         let d;
         try{d=JSON.parse(ev.data);}catch(e){return;}
@@ -130,6 +130,7 @@
         try{this.ws.send(JSON.stringify(msg));this.diag.seqOut++;this.diag.lastOut=msg.type;this.updateDiag();return true;}
         catch(e){this.log('send err '+e);}
       }
+      if(['ack','sync','rename'].includes(msg.type)){this._outbox.push(msg);}
       return false;
     },
 
@@ -242,12 +243,12 @@
         return;
       }
       if(data.type==='lobby'){
-        this.names=(data.players||this.names).slice();
+        this.names=(data.players||this.names).slice();this.applyNames();
         this.updateLobbyList();return;
       }
       if(!this.isHost && data.type==='start'){
         this.names=(data.names||this.names).slice();
-        if(typeof NAMES!=='undefined')for(let i=0;i<4;i++)NAMES[i]=this.names[(this.pid+i)%4]||NAMES[i];
+        this.applyNames();for(let i=0;i<4;i++)if(typeof NAMES!=='undefined')NAMES[i]=this.names[(this.pid+i)%4]||NAMES[i];
         const m=document.getElementById('modal');if(m)m.classList.remove('show');
         this.status('游戏开始，同步中…');
         if(!this._syncTimer)this._syncTimer=setInterval(()=>{if(!G||!G.h)this.toHost({type:'sync'});else{clearInterval(this._syncTimer);this._syncTimer=null;}},2000);
@@ -258,7 +259,7 @@
         if(data.toPid!=null&&Number(data.toPid)!==this.pid)return;
         if(!data.G||!data.G.h)return;
         try{
-          if(typeof NAMES!=='undefined')for(let i=0;i<4;i++)NAMES[i]=this.names[(this.pid+i)%4]||NAMES[i];
+          this.applyNames();for(let i=0;i<4;i++)if(typeof NAMES!=='undefined')NAMES[i]=this.names[(this.pid+i)%4]||NAMES[i];
           G=this.rotateG(data.G,this.pid);
           if(this._syncTimer&&G&&G.h){clearInterval(this._syncTimer);this._syncTimer=null;}
           if(typeof renderAll==='function'){
@@ -427,6 +428,10 @@
       this.updateLobbyList();
     },
 
+    applyNames(){
+      if(typeof NAMES!=='undefined'){for(let i=0;i<4;i++)NAMES[i]=this.names[i]||NAMES[i];}
+    },
+
     updateLobby(data){
       const players=(data?data.players:this.names).slice();
       const el=document.getElementById('lobbyList'); if(!el)return;
@@ -464,6 +469,9 @@
     }
   };
 
+  const reconnectIfNeeded=()=>{if(Net.active&&(!Net.ws||Net.ws.readyState!==WebSocket.OPEN)&&!Net._fatal){Net.connect(0);}};
+  window.addEventListener('online',reconnectIfNeeded);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)reconnectIfNeeded();});
   Net.init(new URLSearchParams(location.search));
   if(Net.active){
     if(document.readyState==='loading'){

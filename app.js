@@ -17,7 +17,7 @@ function startHand(){
   const sums=pairs.map(p=>p[0]+p[1]);
   let dealer=0;sums.forEach((s,i)=>{if(s>sums[dealer])dealer=i});
   const d2=[1+Math.floor(Math.random()*6),1+Math.floor(Math.random()*6)];
-  G.h={wall:makeDeck(),dealer,turn:dealer,over:false,kongDraw:false,turnCount:0,
+  G.h={wall:makeDeck(),dealer,turn:dealer,over:false,kongDraw:false,turnCount:0,turnActionTaken:false,
     discards:[[],[],[],[]],ind:null,wealth:null,drawn:null,warnWealth:false,
     P:[0,1,2,3].map(()=>({hand:[],melds:[],flowers:[],piao:0,hasDisc:false,draws:0}))};
   renderAll();note('四人掷骰定庄…');
@@ -51,7 +51,7 @@ function dealTiles(){
 /* ---------- 行牌 ---------- */
 function beginTurn(p,initial=false){
   if(G.h.over)return;
-  G.h.turn=p;G.h.turnCount++;renderAll();
+  G.h.turn=p;G.h.turnCount++;G.h.turnActionTaken=false;renderAll();
   if(!initial){
     const t=takeTile(p);
     if(!t){endHandDraw();return}
@@ -87,14 +87,13 @@ function humanOptions(){
   note(P.melds.length===0&&P.hand.length===14?'庄家开局，请出牌（或胡/杠）':'请出牌'+(acts.length?'，或选择上方动作':''));
 }
 function onHandClick(i){
-  if(!G||!G.h||G.h.over)return;
+  if(!G||!G.h||G.h.over||G.h.turnActionTaken)return;
   const P=G.h.P[0];
   if(ISCLIENT()){ /* 客户端：出牌请求发回房主 */
     if(G.h.turn!==0||P.hand.length!==3*(4-P.melds.length)+2)return;
     const t=P.hand[i];
     if(t===G.h.wealth&&!G.h.warnWealth){G.h.warnWealth=true;note('⚠ 财神是百搭！再点一次确认打出 —— 若已财吊（听全牌）打出即「飘财」，胡牌翻倍');setTimeout(()=>{if(G&&G.h)G.h.warnWealth=false},4000);return}
-    clearActions();
-    Net.sendAction({act:'discard',tile:t});
+    clearActions();G.h.turnActionTaken=true;Net.sendAction({act:'discard',tile:t});
     return;
   }
   if(G.h.turn!==0||P.hand.length!==3*(4-P.melds.length)+2)return;
@@ -108,7 +107,9 @@ $('#hand').addEventListener('click',e=>{
 });
 /* ---------- 出牌 ---------- */
 function doDiscard(p,idx){
-  const P=G.h.P[p],tile=P.hand.splice(idx,1)[0];
+  if(!G||!G.h||G.h.over||G.h.turnActionTaken)return;
+  const P=G.h.P[p];if(!P||idx<0||idx>=P.hand.length)return;
+  G.h.turnActionTaken=true;const tile=P.hand.splice(idx,1)[0];
   P.hasDisc=true;G.h.kongDraw=false;
   if(tile===G.h.wealth){
     const w=waitTiles(P.hand,G.h.wealth,4-P.melds.length);
@@ -193,7 +194,7 @@ function doClaim(p,tile,cl){
     for(let k=0;k<3;k++)P.hand.splice(P.hand.indexOf(tile),1);
     P.melds.push({type:'gang',tiles:[tile,tile,tile,tile],from:p});
     sfx('gang');note(NAMES[q]+' 明杠 '+tile);
-    G.h.kongDraw=true;G.h.turn=q;renderAll();
+    G.h.kongDraw=true;G.h.turn=q;G.h.turnActionTaken=false;renderAll();
     const t=takeTile(q,true);
     if(!t){endHandDraw();return}
     P.hand.push(t);G.h.drawn=t;renderAll();
@@ -203,7 +204,7 @@ function doClaim(p,tile,cl){
     for(let k=0;k<2;k++)P.hand.splice(P.hand.indexOf(tile),1);
     P.melds.push({type:'peng',tiles:[tile,tile,tile],from:p});
     sfx('peng');note(NAMES[q]+' 碰 '+tile);
-    G.h.turn=q;renderAll();
+    G.h.turn=q;G.h.turnActionTaken=false;renderAll();
     if(q!==0&&!REMOTE(q))later(()=>aiDiscard(q),700);
     else if(REMOTE(q)){Net.broadcastState();Net.sendTurn(q)}
   }else{
@@ -211,7 +212,7 @@ function doClaim(p,tile,cl){
     const seq=[...cl.opt,tile].sort((a,b)=>valOf(a)-valOf(b));
     P.melds.push({type:'chi',tiles:seq,from:p});
     note(NAMES[q]+' 吃 '+seq.join(' '));
-    G.h.turn=q;renderAll();
+    G.h.turn=q;G.h.turnActionTaken=false;renderAll();
     if(q!==0&&!REMOTE(q))later(()=>aiDiscard(q),700);
     else if(REMOTE(q)){Net.broadcastState();Net.sendTurn(q)}
   }
@@ -222,7 +223,7 @@ function doAnGang(p,t){
   for(let k=0;k<4;k++)P.hand.splice(P.hand.indexOf(t),1);
   P.melds.push({type:'gang',tiles:[t,t,t,t]});
   sfx('gang');note(NAMES[p]+' 暗杠 '+t);
-  G.h.kongDraw=true;G.h.turn=p;renderAll();
+  G.h.kongDraw=true;G.h.turn=p;G.h.turnActionTaken=false;renderAll();
   const d=takeTile(p,true);
   if(!d){endHandDraw();return}
   P.hand.push(d);G.h.drawn=d;renderAll();
@@ -239,7 +240,7 @@ function jiaGangFlow(p,mi,t){
     P.hand.splice(P.hand.indexOf(t),1);
     const m=P.melds[mi];m.type='gang';m.tiles=[t,t,t,t];
     sfx('gang');note(NAMES[p]+' 补杠 '+t);
-    G.h.kongDraw=true;G.h.turn=p;renderAll();
+    G.h.kongDraw=true;G.h.turn=p;G.h.turnActionTaken=false;renderAll();
     const d=takeTile(p,true);
     if(!d){endHandDraw();return}
     P.hand.push(d);G.h.drawn=d;renderAll();
@@ -363,7 +364,7 @@ const MODE=new URLSearchParams(location.search).get('mode')==='ju'?'ju':'p8';
 globalThis.netRemoteAction=function(p,a){
   if(!G||!G.h||G.h.over||G.h.turn!==p)return;
   const P=G.h.P[p];
-  if(a.act==='discard'){const i=P.hand.indexOf(a.tile);if(i>=0)doDiscard(p,i);return}
+  if(a.act==='discard'){if(G.h.turnActionTaken)return;const need=4-P.melds.length;if(P.hand.length!==3*need+2)return;const i=P.hand.indexOf(a.tile);if(i>=0)doDiscard(p,i);return}
   if(a.act==='win'){if(canWinStruct(P.hand,G.h.wealth,4-P.melds.length))winSelf(p);return}
   if(a.act==='angang'){if(counts(P.hand)[a.t]===4)doAnGang(p,a.t);return}
   if(a.act==='jiagang'){const m=P.melds[a.mi];if(m&&m.type==='peng'&&P.hand.includes(a.t))jiaGangFlow(p,a.mi,a.t);return}

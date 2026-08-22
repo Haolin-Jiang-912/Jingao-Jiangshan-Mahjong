@@ -324,3 +324,12 @@ body.mobile-mode .desk-table{
   .my-score{top:-24px;font-size:.65rem}
   .mbox{padding:1rem 1.1rem}
 }
+/* 联机对局可操作性与碰吃布局修复 */
+.hand-col{gap:10px;min-width:0}
+.melds-row{min-height:72px;align-items:flex-end;padding:4px 0;position:relative;z-index:2;overflow:visible}
+.meld{position:relative;z-index:1;pointer-events:none}
+.hand{position:relative;z-index:4;min-height:70px;align-items:flex-end}
+.hand .tile{position:relative;z-index:5;touch-action:manipulation}
+.tile:hover{transform:none}
+@media (hover:hover){.tile:hover{transform:translateY(-8px)}}
+@media (max-width:700px){.melds-row{min-height:58px;padding:2px 0}.hand{min-height:56px}}
