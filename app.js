@@ -122,7 +122,7 @@ handEl.addEventListener('pointerup',e=>{
   const idx=handPointer.index,moved=handPointer.moved;
   const b=handEl.querySelector(`[data-i="${idx}"]`);if(b)b.classList.remove('selected');
   handPointer.id=null;handPointer.index=-1;handPointer.moved=false;
-  if(!moved){handPointer.suppressClick=true;onHandClick(idx);setTimeout(()=>{handPointer.suppressClick=false},0)}
+  if(!moved){handPointer.suppressClick=true;onHandClick(idx);setTimeout(()=>{handPointer.suppressClick=false},350)}
 });
 handEl.addEventListener('pointercancel',()=>{
   handEl.querySelector('.selected')?.classList.remove('selected');handPointer.id=null;handPointer.index=-1;handPointer.moved=false;
