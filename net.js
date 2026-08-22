@@ -9,6 +9,7 @@
     active:false,isHost:false,pid:-1,room:'',mode:'p8',started:false,
     ws:null,wsUrl:'',
     names:DEF_NAMES.slice(),
+    humanSeats:[true,false,false,false],
     myName:'玩家',
     onMessage:null,
     msgQueue:[],
@@ -44,9 +45,9 @@
     },
 
     defaultWsUrl(){
-      /* 默认与页面同源：部署后（如 Render）页面和 WebSocket 是同一服务，零配置 */
+      /* 默认与页面同源：部署后（如 Render/natapp）页面和 WebSocket 是同一服务，零配置 */
       if(location.protocol==='https:')return 'wss://'+location.host;
-      return 'ws://'+location.hostname+':3001';
+      return 'ws://'+location.host;
     },
 
     getWsUrl(params){
@@ -146,7 +147,7 @@
       this.updateLobbyList();
     },
 
-    isRemote(p){return this.isHost && p>=1 && p<=3 && this.names[p] && this.names[p]!=='房主';},
+    isRemote(p){return this.isHost && p>=1 && p<=3 && this.humanSeats[p]===true;},
     remoteConn(p){return this.isRemote(p)?{send:(m)=>this.broadcast(Object.assign({},m))}:null;},
 
     dispatch(data){
@@ -161,10 +162,15 @@
         if(pid!=null && window.netClaimMsg)window.netClaimMsg(pid,data.res||null);
         return;
       }
+      if(this.isHost && data.type==='join'){
+        const pid=data.pid;
+        if(pid!=null && pid>=1 && pid<=3){this.names[pid]=(data.name||('玩家'+pid)).slice(0,8);this.humanSeats[pid]=true;this.broadcastLobby();}
+        return;
+      }
       if(this.isHost && data.type==='ack'){
         const pid=data.fromPid!=null?data.fromPid:data.pid;
         const name=(data.name||this.names[pid]||'玩家'+pid).slice(0,8);
-        if(pid!=null && pid>=1 && pid<=3){this.names[pid]=name;this.log('client '+pid+' ACK');this.broadcastLobby();this.broadcastState();}
+        if(pid!=null && pid>=1 && pid<=3){this.names[pid]=name;this.humanSeats[pid]=true;this.log('client '+pid+' ACK');this.broadcastLobby();this.broadcastState();}
         return;
       }
       if(this.isHost && data.type==='rename'){
@@ -173,7 +179,8 @@
         return;
       }
       if(this.isHost && data.type==='sync'){
-        try{this.broadcastState();}catch(e){this.log('sync err '+e)}
+        const pid=data.fromPid!=null?data.fromPid:data.pid;
+        try{this.broadcastState(pid);}catch(e){this.log('sync err '+e)}
         return;
       }
 
@@ -181,9 +188,10 @@
         /* 客人掉线：保留座位 90 秒等待重连 */
         const pid=data.pid;
         if(pid>=1&&pid<=3){
-          this._dc[pid]=true;
+          this._dc[pid]=true;this.humanSeats[pid]=false;
           if(typeof note==='function')note((this.names[pid]||('玩家'+pid))+' 掉线了，等待重连…');
-          this.broadcast({type:'notify',text:(this.names[pid]||('玩家'+pid))+' 掉线了，等待重连…'});
+          this.broadcast({type:'notify',text:(this.names[pid]||('玩家'+pid))+' 掉线了，AI 暂代其出牌…'});
+          if(G&&G.h&&G.h.turn===pid&&typeof aiPlay==='function')setTimeout(()=>{if(G&&G.h&&!G.h.over&&G.h.turn===pid&&!this.isRemote(pid))aiPlay(pid);},0);
         }
         return;
       }
@@ -191,9 +199,10 @@
         /* 客人重连恢复：重推完整状态，若是他的回合再补发 turn */
         const pid=data.pid;
         if(data.name)this.names[pid]=data.name;
+        if(pid!=null && pid>=1 && pid<=3)this.humanSeats[pid]=true;
         this._dc[pid]=false;
         try{this.broadcastState();}catch(e){}
-        if(window.G&&window.G.h&&window.G.h.turn===pid)this.sendTurn(pid);
+        if(G&&G.h&&G.h.turn===pid)this.sendTurn(pid);
         if(typeof note==='function')note((this.names[pid]||('玩家'+pid))+' 已重新连接');
         this.broadcast({type:'notify',text:(this.names[pid]||('玩家'+pid))+' 已重新连接'});
         return;
@@ -204,7 +213,7 @@
         try{sessionStorage.setItem('jw-net-token-'+this.room,this.token);}catch(e){}
         this.names=(data.names||this.names).slice();
         this._joined=true;
-        if(window.G&&window.G.h){
+        if(G&&G.h){
           this.status('已重新连接，同步牌局…');
           setTimeout(()=>{try{this.broadcastState();}catch(e){}},300);
         }
@@ -219,10 +228,12 @@
         this._joined=true;
         if(this._syncTimer){clearInterval(this._syncTimer);this._syncTimer=null;}
         this.toHost({type:'ack',pid:this.pid,name:this.myName});
-        if(window.G&&window.G.h){
+        if(!this._syncTimer)this._syncTimer=setInterval(()=>{if(!G||!G.h)this.toHost({type:'sync'});else{clearInterval(this._syncTimer);this._syncTimer=null;}},2000);
+        try{this.toHost({type:'sync'});}catch(e){}
+        if(G&&G.h){
           /* 重连恢复：立刻拉取最新牌局 */
           this.status('已重新连接，同步牌局…');
-          if(!this._syncTimer)this._syncTimer=setInterval(()=>{if(!window.G||!window.G.h)this.toHost({type:'sync'});else{clearInterval(this._syncTimer);this._syncTimer=null;}},2000);
+          if(!this._syncTimer)this._syncTimer=setInterval(()=>{if(!G||!G.h)this.toHost({type:'sync'});else{clearInterval(this._syncTimer);this._syncTimer=null;}},2000);
           try{this.toHost({type:'sync'});}catch(e){}
         }else{
           this.status('已连接房间 '+this.room+'，等待房主…');
@@ -239,22 +250,23 @@
         if(typeof NAMES!=='undefined')for(let i=0;i<4;i++)NAMES[i]=this.names[(this.pid+i)%4]||NAMES[i];
         const m=document.getElementById('modal');if(m)m.classList.remove('show');
         this.status('游戏开始，同步中…');
-        if(!this._syncTimer)this._syncTimer=setInterval(()=>{if(!window.G||!window.G.h)this.toHost({type:'sync'});else{clearInterval(this._syncTimer);this._syncTimer=null;}},2000);
+        if(!this._syncTimer)this._syncTimer=setInterval(()=>{if(!G||!G.h)this.toHost({type:'sync'});else{clearInterval(this._syncTimer);this._syncTimer=null;}},2000);
         try{this.toHost({type:'sync'});}catch(e){}
         return;
       }
       if(!this.isHost && data.type==='state'){
+        if(data.toPid!=null&&Number(data.toPid)!==this.pid)return;
         if(!data.G||!data.G.h)return;
         try{
           if(typeof NAMES!=='undefined')for(let i=0;i<4;i++)NAMES[i]=this.names[(this.pid+i)%4]||NAMES[i];
-          window.G=this.rotateG(data.G,this.pid);
-          if(this._syncTimer&&window.G&&window.G.h){clearInterval(this._syncTimer);this._syncTimer=null;}
+          G=this.rotateG(data.G,this.pid);
+          if(this._syncTimer&&G&&G.h){clearInterval(this._syncTimer);this._syncTimer=null;}
           if(typeof renderAll==='function'){
             renderAll();
             const m=document.getElementById('modal');
-            if(m&&m.classList.contains('show')&&!window.G.h.over)m.classList.remove('show');
+            if(m&&m.classList.contains('show')&&!G.h.over)m.classList.remove('show');
           }
-          this.status(window.G.h.over?'本盘结束':NAMES[window.G.h.turn]+' 行牌（同步）');
+          this.status(G.h.over?'本盘结束':NAMES[G.h.turn]+' 行牌（同步）');
         }catch(e){console.warn('client state err',e);}
         return;
       }
@@ -263,6 +275,7 @@
         return;
       }
       if(!this.isHost && data.type==='claimOffer'){
+        if(data.pid!==this.pid)return;
         if(typeof setActions==='function'){
           const wealth=data.wealth;
           const hasWealth=o=>o.act==='qiang'?false:(o.act==='吃'?data.tile===wealth||o.opt.includes(wealth):data.tile===wealth);
@@ -298,7 +311,7 @@
     },
 
     sendTurn(p,initial=false){
-      if(this.isHost) this.broadcast({type:'turn',pid:p,initial:!!initial});
+      if(this.isHost) this.broadcast({type:'turn',pid:p,toPid:p,initial:!!initial});
     },
 
     sendAction(action){
@@ -306,24 +319,34 @@
     },
 
     sendClaimOffer(p,tile,options){
-      const wealth=window.G&&window.G.h?window.G.h.wealth:null;
-      if(this.isHost) this.broadcast({type:'claimOffer',pid:p,tile,wealth,options:options.map(o=>({act:o.act,opt:o.opt||null}))});
+      const wealth=G&&G.h?G.h.wealth:null;
+      if(this.isHost) this.broadcast({type:'claimOffer',pid:p,toPid:p,tile,wealth,options:options.map(o=>({act:o.act,opt:o.opt||null}))});
     },
 
     sendClaimResponse(res){
       this.toHost({type:'claimResponse',pid:this.pid,res:res||null});
     },
 
-    /* 房主广播完整状态（墙用占位，他人手牌用“白”覆盖） */
-    broadcastState(){
+    /* 房主按座位发送状态：本人手牌可见，另外三家只显示牌背 */
+    broadcastState(targetPid=null){
       if(!this.active||!this.isHost)return;
-      const s=JSON.parse(JSON.stringify(window.G||{}));
-      if(!s||!s.h)return;
-      const wl=s.h.wall?s.h.wall.length:0;
-      s.h.wall=new Array(wl).fill('…');
-      const ss=JSON.parse(JSON.stringify(s));
-      for(let q=0;q<4;q++){if(q!==0)ss.h.P[q].hand=new Array(ss.h.P[q].hand.length).fill('白');}
-      this.broadcast({type:'state',G:ss,seq:++this.diag.seqOut});
+      const base=JSON.parse(JSON.stringify(G||{}));
+      if(!base||!base.h){this._statePending=true;setTimeout(()=>{if(this.isHost&&G&&G.h)this.broadcastState(targetPid);},250);return;}
+      const wl=base.h.wall?base.h.wall.length:0;
+      base.h.wall=new Array(wl).fill('…');
+      const sendOne=pid=>{
+        const state=JSON.parse(JSON.stringify(base));
+        for(let q=0;q<4;q++){
+          if(q!==pid)state.h.P[q].hand=new Array(state.h.P[q].hand.length).fill('白');
+        }
+        this.broadcast({type:'state',G:state,toPid:pid,seq:++this.diag.seqOut});
+      };
+      if(targetPid!=null){
+        const pid=Number(targetPid);
+        if(pid>=1&&pid<=3)sendOne(pid);
+      }else{
+        for(let pid=1;pid<=3;pid++)if(this.isRemote(pid))sendOne(pid);
+      }
       this.diag.lastOut='state';this.updateDiag();
     },
 

@@ -222,6 +222,14 @@ wss.on('connection',(ws, req)=>{
       }
     }
 
+    // 房主 -> 指定客户端（用于按座位发送私有手牌状态）
+    if(meta.role==='host' && msg.toPid!=null){
+      room.clients.forEach((m,w2)=>{
+        if(m.role==='client' && m.pid===Number(msg.toPid)){send(w2,msg);}
+      });
+      return;
+    }
+
     // 房主 -> 客户端（广播）
     if(meta.role==='host'){
       if(['state','turn','claimOffer','start','modal','notify','lobby','welcome','broadcast'].includes(msg.type)){
