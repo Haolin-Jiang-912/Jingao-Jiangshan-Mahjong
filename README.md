@@ -42,44 +42,31 @@
 
 由于浏览器 P2P 在复杂网络（校园网 / 移动数据 / 对称 NAT）下很难穿透，本版本改用 **WebSocket 服务器中转**。游戏逻辑仍由“房主”浏览器权威执行，服务器只负责转发消息，因此无需担心服务器作弊问题。
 
-封面提供三种一键配置：
+### 零配置异地联机（推荐）
 
-- **本机**：服务器地址自动设为 `ws://localhost:3001`，适合同一台电脑开多个浏览器测试。
-- **局域网**：服务器地址自动设为 `ws://当前页面主机名:3001`。只要通过 `http://电脑内网IP:3001/` 打开页面，好友同 Wi-Fi 下即可加入。
-- **异地**：填写已部署的公网服务器地址（如 Render/VPS），一键生成邀请链接，好友无需部署即可加入。
+`server.js` 同时提供**游戏页面 + WebSocket 服务**（同一端口）。只要部署一次，页面的服务器地址自动与网址同源，**任何人都无需填写服务器地址**：
 
-### 本地联机步骤
+1. 在 Render Dashboard 选择「Blueprint」导入 GitHub 仓库（项目已含 `render.yaml`）。
+2. 部署完成后打开 `https://你的服务名.onrender.com/`。
+3. 输入昵称 → 「创建房间」→ 把弹窗里的**邀请链接**发给好友。
+4. 好友点开链接自动加入，无需任何配置；人满或 1 人以上房主点「开始游戏」。
 
-1. 启动联机服务器：
-   ```bash
-   node server.js
-   ```
-   默认端口 `3001`，`server.js` 同时提供静态页面，打开 `http://localhost:3001/` 即可。
-2. 在封面选「本机」或「局域网」，输入昵称，点击对应的开房间按钮。
-3. 把弹窗里的邀请链接发给好友。
-4. 好友打开链接后自动加入；人满或 1 人以上房主点「开始游戏」。
+- 免费实例会在 15 分钟无流量后休眠，冷启动约 30~60 秒，等待一下即可。
+- 想换服务器调试时，可在浏览器控制台执行 `localStorage.setItem('jw-ws-override','wss://新地址')` 覆盖。
 
-### 部署到公网
+### 本地开发
 
-#### Vercel（静态前端）
+```bash
+npm install
+node server.js
+```
 
-项目已包含 `vercel.json`，直接导入 GitHub 仓库即可自动部署前端页面。
+打开 `http://localhost:3001/`，联机连接自动指向本机，无需额外设置。
 
-> 注意：Vercel Serverless Function 不支持持久 WebSocket，因此**联机服务器请用 Render / Railway / 自建 VPS**。
-
-#### Render（联机服务器）
-
-项目已包含 `render.yaml`，在 Render Dashboard 选择「Blueprint」导入仓库即可：
-- 服务名：`jw-mahjong-hall-server`
-- 构建命令：`npm install`
-- 启动命令：`node server.js`
-- 免费实例会在 15 分钟无流量后休眠，首次连接可能需等待 30~60 秒唤醒。
-
-部署成功后得到类似 `wss://jw-mahjong-hall-server.onrender.com` 的地址，填到封面「异地」输入框即可。
-
-#### 其他平台
+### 其他平台
 
 `server.js` 可部署到任何支持 Node.js 持久进程的平台（Railway / Fly.io / 自己 VPS）。环境变量 `PORT` 由平台注入。
+前端也可以单独部署到 Vercel（已含 `vercel.json`），但 Vercel 不支持持久 WebSocket，联机仍需 Render 之类的服务器；此时邀请链接会自动带上 `&ws=` 参数指向联机服务器。
 
 ### PartyKit / Cloudflare Workers 兼容
 
