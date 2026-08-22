@@ -379,3 +379,6 @@ body.mobile-mode .teacher-bubble{display:none}
 body.mobile-mode .desk-table{top:calc(50% + 14px) !important}
 body.mobile-mode .center-board b{bottom:8%;font-size:.82rem;padding:.25rem .55rem}
 body.mobile-mode .hand-area p{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin:0 0 6px;padding:4px 10px;background:#17305dcc;border:2px solid #f3d576;border-radius:5px;white-space:nowrap;z-index:25;font-size:.72rem}
+
+/* 对手隐藏手牌不在桌面铺开：只显示弃牌、碰吃杠和补花；胡牌结算时再展示牌面 */
+body.game-page .opp .backs{display:none !important}
