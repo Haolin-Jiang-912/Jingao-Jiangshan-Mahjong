@@ -9,6 +9,7 @@ const http = require('http');
 const url = require('url');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3001;
 const HEARTBEAT_MS = 30000;
@@ -23,7 +24,7 @@ const MIME={
 
 const rooms = new Map(); // roomId -> {clients:Map(ws->meta), hostWs, mode, gone:Map(token->meta), graceTimer}
 
-function makeToken(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36);}
+function makeToken(){return crypto.randomUUID();}
 
 function getRoom(id){
   if(!rooms.has(id)) rooms.set(id,{clients:new Map(),hostWs:null,mode:'p8',gone:{},graceTimer:null});
@@ -81,10 +82,10 @@ const server = http.createServer((req,res)=>{
   const parsed=url.parse(req.url,true);
   if(parsed.pathname==='/health'){res.writeHead(200,{'Content-Type':'text/plain'});res.end('ok');return;}
 
-  let filePath=decodeURIComponent(parsed.pathname);
+  let filePath;try{filePath=decodeURIComponent(parsed.pathname);}catch{res.writeHead(400);res.end('Bad request');return;}
   if(filePath==='/'||filePath==='') filePath='/index.html';
   const safePath=path.normalize(path.join(ROOT,filePath));
-  if(!safePath.startsWith(ROOT.replace(/\\$/,''))){
+  if(!safePath.startsWith(ROOT+path.sep)||filePath.split(/[\\/]/).some(p=>p.startsWith('.'))){
     res.writeHead(403,{'Content-Type':'text/plain'});res.end('Forbidden');return;
   }
 
@@ -105,7 +106,7 @@ const server = http.createServer((req,res)=>{
   });
 });
 
-const wss = new WebSocket.Server({server});
+const wss = new WebSocket.Server({server,maxPayload:65536});
 
 wss.on('connection',(ws, req)=>{
   ws.isAlive=true;
@@ -114,15 +115,15 @@ wss.on('connection',(ws, req)=>{
   const parsed=url.parse(req.url||'',true);
   const roomId=(parsed.query.room||'').trim().toUpperCase();
   const role=parsed.query.role || parsed.query.net; // host / client
-  const name=decodeURIComponent(parsed.query.name||'玩家').slice(0,8)||'玩家';
+  const name=String(parsed.query.name||'玩家').slice(0,8)||'玩家';
   const mode=parsed.query.mode==='ju'?'ju':'p8';
   const reqToken=(parsed.query.token||'').trim();
 
-  if(!roomId){send(ws,{type:'error',text:'缺少房间号'});ws.close();return;}
+  if(!/^[A-Z0-9]{4,8}$/.test(roomId)){send(ws,{type:'error',text:'房间号须为 4–8 位字母或数字'});ws.close();return;}
   if(!role || (role!=='host' && role!=='client')){send(ws,{type:'error',text:'缺少角色(role=host|client)'});ws.close();return;}
 
   const room=getRoom(roomId);
-  room.mode=mode;
+  if(role==='host')room.mode=mode;
 
   let meta=null;
 
@@ -203,12 +204,13 @@ wss.on('connection',(ws, req)=>{
       room.clients.set(ws,meta);
       send(room.hostWs,{type:'join',pid,name});
       broadcast(room,lobbyMsg(room,roomId));
-      send(ws,{type:'welcome',pid,names:roomNames(room),mode,token:tk});
+      send(ws,{type:'welcome',pid,names:roomNames(room),mode:room.mode,token:tk});
     }
   }
 
   ws.on('message', data=>{
     let msg; try{msg=JSON.parse(data);}catch(e){return;}
+    if(!msg||typeof msg!=='object'||Array.isArray(msg))return;
     const meta=room.clients.get(ws);
     if(!meta) return;
 
@@ -239,7 +241,7 @@ wss.on('connection',(ws, req)=>{
     }
 
     // 通用转发（任意 -> 同房间其它人）
-    broadcast(room,Object.assign({},msg,{fromPid:meta.pid}),ws);
+    // Unknown messages are never relayed as if they came from the host.
   });
 
   ws.on('close',()=>{

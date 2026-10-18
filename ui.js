@@ -3,6 +3,8 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const NAMES=['林林','超超','含含','政政'];
 const CN='一二三四五六七八九';
 let G=null;
+const escapeHTML=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let selectedHandIndex=-1,handSignature='';
 const FLOWER_META={
   '春':{n:1,col:'#c41e1e'},'夏':{n:2,col:'#c41e1e'},'秋':{n:3,col:'#c41e1e'},'冬':{n:4,col:'#c41e1e'},
   '梅':{n:1,col:'#c41e1e'},'兰':{n:2,col:'#3b5998'},'竹':{n:3,col:'#2a8a2a'},'菊':{n:4,col:'#7a3db8'}
@@ -38,15 +40,31 @@ function innerFace(t){
   if(t==='白')return `<span class="bai"><i></i></span>`;
   return `<span class="feng">${t}</span>`;
 }
-function face(t,cls='tile'){return `<span class="${cls}">${innerFace(t)}</span>`}
+function face(t,cls='tile'){return `<span class="${cls}" role="img" aria-label="${escapeHTML(t)}">${innerFace(t)}</span>`}
 function backTile(){return '<span class="tile back"></span>'}
 function renderHand(){
   const P=G.h.P[0];
   P.hand.sort((a,b)=>valOf(a)-valOf(b));
-  $('#hand').innerHTML=P.hand.map((t,i)=>`<button class="tile ${t===G.h.wealth?'wealth':''}" data-i="${i}">${innerFace(t)}</button>`).join('');
+  const signature=P.hand.join('|')+':'+G.h.turn+':'+G.hand;
+  if(signature!==handSignature){selectedHandIndex=-1;handSignature=signature;}
+  $('#hand').innerHTML=P.hand.map((t,i)=>`<button class="tile ${t===G.h.wealth?'wealth':''} ${i===selectedHandIndex?'selected':''}" data-i="${i}" aria-label="${t}${t===G.h.wealth?'，财神':''}" aria-pressed="${i===selectedHandIndex}">${innerFace(t)}</button>`).join('');
   $('#myMelds').innerHTML=P.melds.map(m=>`<span class="meld ${m.type}">${m.tiles.map(t=>face(t,'mtile')).join('')}</span>`).join('');
   $('#flowerTiles').innerHTML=P.flowers.map(f=>face(f,'ftile')).join('');
   $('#flowers').textContent='花 '+P.flowers.length;
+  renderHandControls();
+}
+function canChooseTile(){return !!(G&&G.h&&!G.h.over&&!G.h.turnActionTaken&&G.h.turn===0&&G.h.P[0].hand.length===3*(4-G.h.P[0].melds.length)+2);}
+function renderHandControls(){
+  const b=$('#discardBtn');if(!b)return;
+  b.disabled=!canChooseTile()||selectedHandIndex<0;
+  const t=G.h.P[0].hand[selectedHandIndex];
+  b.textContent=t?'打出 '+t:'选择一张牌';
+  const hint=$('#tileHint');if(hint)hint.textContent=canChooseTile()?(selectedHandIndex<0?'点选一张手牌，再点「打出」':'已选 '+t+' · 点「打出」确认'):(G.h.over?'本盘结束，查看结算':'等待其他同学行牌');
+}
+function selectHandTile(i){
+  if(!canChooseTile())return;
+  selectedHandIndex=i;G.h.warnWealth=false;renderHand();
+  const hint=$('#tileHint');if(hint)hint.textContent='已选 '+G.h.P[0].hand[i]+' · 点「打出」确认';
 }
 function renderOpp(q){
   const P=G.h.P[q],el=$('#opp-'+q);
@@ -68,7 +86,7 @@ function renderScores(){
   for(let q=0;q<4;q++){
     const el=q===0?$('#myScore'):$(`.oscore[data-p="${q}"]`);
     if(!el)continue;
-    el.innerHTML=`${NAMES[q]} <b>${G.scores[q]}</b>${G.mode==='ju'&&G.specials[q]?'<i>+'+G.specials[q]+'★</i>':''}`;
+    el.innerHTML=`${escapeHTML(NAMES[q])} <b>${G.scores[q]}</b>${G.mode==='ju'&&G.specials[q]?'<i>+'+G.specials[q]+'★</i>':''}`;
     el.classList.toggle('on',G.h.turn===q&&!G.h.over);
   }
 }

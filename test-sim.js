@@ -70,5 +70,17 @@ const harness=`
   let juHands=1;simHand(0,true);
   while(juHands<12&&!G.scores.some(s=>s<=0)){simHand(juHands);juHands++;G.hand++}
   console.log('SIM_OK p8_hands=8 ju_hands='+juHands+' ju_scores='+JSON.stringify(G.scores)+' specials='+JSON.stringify(G.specials));
+  // Regression: the local player's rob-kong response must settle immediately.
+  G.h.over=false;G.h.turn=1;G.h.wealth='白';G.h.turnActionTaken=false;
+  G.h.P[0].hand=['1万','2万','3万','4万','5万','6万','1条','2条','3条','7筒','8筒','9筒','东'];
+  G.h.P[0].melds=[];
+  G.h.P[1].hand=['东'];G.h.P[1].melds=[{type:'peng',tiles:['东','东','东'],from:2}];
+  G.h.P[2].hand=[];G.h.P[3].hand=[];
+  jiaGangFlow(1,0,'东');
+  if(!robWinCtl)throw new Error('rob-kong offer missing');
+  robWinCtl.resp(0,'qiang');
+  if(!G.h.over||robWinCtl!==null)throw new Error('rob-kong response stalled');
+  console.log('FLOW_OK: local rob-kong settles without waiting for a timer');
+
 })();`;
 try{eval(code+harness)}catch(e){console.error('SIM_FAIL:',e.message);console.error(e.stack.split('\n').slice(0,6).join('\n'));process.exit(1)}

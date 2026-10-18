@@ -1,6 +1,6 @@
 /* 江山麻将 · 游戏流程与AI（只能自摸 · 可抢杠 · 财神百搭） */
 const DICE='⚀⚁⚂⚃⚄⚅',PRI={'杠':3,'碰':2,'吃':1};
-let aiTimer=null;
+let aiTimer=null,diceTimer=null;
 const later=(fn,ms=800)=>{clearTimeout(aiTimer);aiTimer=setTimeout(fn,ms)};
 /* 联机判定：net.js 先于 app.js 加载；test-sim 无 net.js，用 typeof 保护 */
 const NETON=()=>typeof Net!=='undefined'&&Net.active;
@@ -12,6 +12,7 @@ function newGame(mode){G={mode,hand:0,scores:mode==='ju'?[30,30,30,30]:[0,0,0,0]
 
 /* ---------- 开盘 ---------- */
 function startHand(){
+  clearInterval(diceTimer);claimWin=null;robWinCtl=null;
   clearTimeout(aiTimer);clearActions();$('#modal').classList.remove('show');
   const pairs=[0,1,2,3].map(()=>[1+Math.floor(Math.random()*6),1+Math.floor(Math.random()*6)]);
   const sums=pairs.map(p=>p[0]+p[1]);
@@ -21,14 +22,14 @@ function startHand(){
     discards:[[],[],[],[]],ind:null,wealth:null,drawn:null,warnWealth:false,
     P:[0,1,2,3].map(()=>({hand:[],melds:[],flowers:[],piao:0,hasDisc:false,draws:0}))};
   renderAll();note('四人掷骰定庄…');
-  let n=0,dealt=false;const iv=setInterval(()=>{
+  let n=0,dealt=false;const iv=diceTimer=setInterval(()=>{
     $('#diceBox').textContent=DICE[Math.floor(Math.random()*6)]+DICE[Math.floor(Math.random()*6)];sfx('dice');renderAll();
     if(++n>=5&&!dealt){dealt=true;clearInterval(iv);$('#diceBox').textContent=DICE[d2[0]-1]+DICE[d2[1]-1];
       dealTiles();
       let fi=0;while(fi<G.h.wall.length&&isFlower(G.h.wall[fi]))fi++;
       G.h.ind=G.h.wall[fi];G.h.wealth=nextTile(G.h.ind);
       renderAll();
-      const dir=['下家','对家','上家','自己','下家'][d2[0]+d2[1]-2];
+      const dir=['自己','下家','对家','上家'][(d2[0]+d2[1]-1)%4];
       note(`${NAMES[dealer]} 掷出 ${sums[dealer]} 点坐庄；再掷 ${d2[0]+d2[1]}，自${dir}牌墙起摸 · 翻牌 ${G.h.ind} → 财神 ${G.h.wealth}（百搭）`);
       beginTurn(dealer,true);
     }
@@ -68,7 +69,7 @@ function nextActor(p){
   else aiPlay(p);
 }
 function wealthWarn(t){return t===G.h.wealth?'⚠ 含财神 ':' '}
-function humanOptions(){
+function humanOptions(initial=false){
   const P=G.h.P[0],need=4-P.melds.length,acts=[];
   if(ISCLIENT()){ /* 客户端：选项本地算好，动作发回房主执行 */
     if(canWinStruct(P.hand,G.h.wealth,need))acts.push({label:'胡！',fn:()=>Net.sendAction({act:'win'})});
@@ -84,7 +85,7 @@ function humanOptions(){
   Object.keys(c).filter(t=>c[t]===4).forEach(t=>acts.push({label:wealthWarn(t)+'暗杠 '+t,fn:()=>doAnGang(0,t)}));
   P.melds.forEach((m,i)=>{if(m.type==='peng'&&P.hand.includes(m.tiles[0]))acts.push({label:wealthWarn(m.tiles[0])+'补杠 '+m.tiles[0],fn:()=>jiaGangFlow(0,i,m.tiles[0])})});
   setActions(acts);
-  note(P.melds.length===0&&P.hand.length===14?'庄家开局，请出牌（或胡/杠）':'请出牌'+(acts.length?'，或选择上方动作':''));
+  note(initial?'庄家开局，请选牌后确认打出':'轮到你了，请选牌后确认打出'+(acts.length?'，或选择吃碰杠胡动作':''));
 }
 function onHandClick(i){
   if(!G||!G.h||G.h.over||G.h.turnActionTaken)return;
@@ -122,7 +123,7 @@ handEl.addEventListener('pointerup',e=>{
   const idx=handPointer.index,moved=handPointer.moved;
   const b=handEl.querySelector(`[data-i="${idx}"]`);if(b)b.classList.remove('selected');
   handPointer.id=null;handPointer.index=-1;handPointer.moved=false;
-  if(!moved){handPointer.suppressClick=true;onHandClick(idx);setTimeout(()=>{handPointer.suppressClick=false},350)}
+  if(!moved){handPointer.suppressClick=true;selectHandTile(idx);setTimeout(()=>{handPointer.suppressClick=false},350)}
 });
 handEl.addEventListener('pointercancel',()=>{
   handEl.querySelector('.selected')?.classList.remove('selected');handPointer.id=null;handPointer.index=-1;handPointer.moved=false;
@@ -130,8 +131,23 @@ handEl.addEventListener('pointercancel',()=>{
 handEl.addEventListener('click',e=>{
   if(handPointer.suppressClick){e.preventDefault();return}
   const b=e.target.closest('[data-i]');if(!b)return;
-  onHandClick(+b.dataset.i);
+  selectHandTile(+b.dataset.i);
 });
+if($('#discardBtn'))$('#discardBtn').onclick=()=>{
+  if(!canChooseTile()||selectedHandIndex<0)return;
+  onHandClick(selectedHandIndex);renderHandControls();
+};
+if($('#hintBtn'))$('#hintBtn').onclick=()=>{
+  if(!G||!G.h||!G.h.wealth)return;
+  const P=G.h.P[0],need=4-P.melds.length;
+  const hand=P.hand.slice();
+  if(hand.length===3*need+2){
+    if(selectedHandIndex<0){$('#tileHint').textContent='先选一张牌，查看打出后的听牌';return;}
+    hand.splice(selectedHandIndex,1);
+  }
+  const waits=waitTiles(hand,G.h.wealth,need);
+  $('#tileHint').textContent=waits.length===34?'财吊！听所有牌':waits.length?'听牌：'+waits.join('、'):'尚未听牌，继续整理手牌';
+};
 /* ---------- 出牌 ---------- */
 function doDiscard(p,idx){
   if(!G||!G.h||G.h.over||G.h.turnActionTaken)return;
@@ -175,7 +191,13 @@ function openClaimWindow(p,tile,mine,ais){
     later(()=>beginTurn((p+1)%4),650);
   };
   const submit=(q,r)=>{ /* r=null 表示过 */
-    if(!claimWin||done[q])return;done[q]=true;if(r)resp[q]=r;
+    if(!claimWin||done[q]||!mine.some(m=>m.q===q))return;
+    if(r){
+      const legal=mine.find(m=>m.q===q&&m.act===r.act&&JSON.stringify(m.opt||null)===JSON.stringify(r.opt||null));
+      if(!legal)return;
+      resp[q]=legal;
+    }
+    done[q]=true;
     const pend=mine.filter(m=>!done[m.q]);
     if(!pend.length)finish();
     else if(q===0)note('已选择，等待其他玩家…');
@@ -287,8 +309,8 @@ function jiaGangFlow(p,mi,t){
     else if(aiR!==undefined)later(()=>robWin(aiR,p,t),600);
     else proceed();
   };
-  const submit=(q,r)=>{if(!robWinCtl||rdone[q])return;rdone[q]=true;if(r==='qiang')winner=q;
-    if(humanR.every(x=>rdone[x.q]))finish();};
+  const submit=(q,r)=>{if(!robWinCtl||rdone[q]||!humanR.includes(q))return;rdone[q]=true;if(r==='qiang')winner=q;
+    if(humanR.every(x=>rdone[x]))finish();};
   if(humanR.some(q=>REMOTE(q)))timer=setTimeout(finish,12000);
   robWinCtl={resp:submit};
   humanR.forEach(q=>{
@@ -351,7 +373,7 @@ function settleWin(p,winTile,robbed){
   const imm=G.mode==='ju'?res.total-res.special:res.total;
   const rows=[];
   if(robbed!==null){G.scores[robbed]-=imm*3;G.scores[p]+=imm*3;
-    rows.push(`<tr><td>${NAMES[robbed]} 被抢杠</td><td>承包三家 −${imm*3}</td></tr>`)}
+    rows.push(`<tr><td>${escapeHTML(NAMES[robbed])} 被抢杠</td><td>承包三家 −${imm*3}</td></tr>`)}
   else{for(let q=0;q<4;q++)if(q!==p){G.scores[q]-=imm;G.scores[p]+=imm}
     rows.push(`<tr><td>自摸胡</td><td>其余三家各付 ${imm}</td></tr>`)}
   if(G.mode==='ju'&&res.special){G.specials[p]+=res.special;
@@ -359,7 +381,7 @@ function settleWin(p,winTile,robbed){
   sfx('win');renderAll();
   const tilesHtml=P.hand.map(t=>face(t,'mtile')).join('')+P.melds.map(m=>`<span class="meld">${m.tiles.map(t=>face(t,'mtile s')).join('')}</span>`).join('');
   const det=res.detail.map(d=>`<tr><td>${d[0]}</td><td>${d[1]?'+'+d[1]:''}</td></tr>`).join('');
-  showModal(`<h3>${robbed!==null?NAMES[p]+' 抢杠胡！':NAMES[p]+' 自摸胡！'}</h3>
+  showModal(`<h3>${escapeHTML(NAMES[p])+(robbed!==null?' 抢杠胡！':' 自摸胡！')}</h3>
     <div class="wintiles">${tilesHtml}</div>
     <table class="mtable"><tr><th>项目</th><th>分值</th></tr>${det}${rows}
     <tr class="sum"><td>合计</td><td>${imm} 分${G.mode==='ju'&&res.special?'（+'+res.special+'★ 结算时计）':''}</td></tr></table>`,
@@ -381,7 +403,7 @@ function finalSettle(){
     finals=G.scores.map((s,q)=>s+G.specials[q]).map(s=>Math.max(0,s)); /* 负分不进入计算结果 */
   }else finals=G.scores.slice();
   const rank=[0,1,2,3].sort((a,b)=>finals[b]-finals[a]);
-  const rows=rank.map((q,i)=>`<tr class="${i===0?'champ':''}"><td>第${i+1}名</td><td>${NAMES[q]}</td><td>${finals[q]} 分</td></tr>`).join('');
+  const rows=rank.map((q,i)=>`<tr class="${i===0?'champ':''}"><td>第${i+1}名</td><td>${escapeHTML(NAMES[q])}</td><td>${finals[q]} 分</td></tr>`).join('');
   showModal(`<h3>🏁 牌局总结算</h3><p>${G.mode==='ju'?'局麻模式（30分起）：特殊分已计入，负分按 0 计':'8盘模式'}，最终排名：</p>
     <table class="mtable">${rows}</table>`,[{label:'再来一局',fn:()=>location.reload()}]);
 }
@@ -394,7 +416,7 @@ globalThis.netRemoteAction=function(p,a){
   if(a.act==='discard'){if(G.h.turnActionTaken)return;const need=4-P.melds.length;if(P.hand.length!==3*need+2)return;const i=P.hand.indexOf(a.tile);if(i>=0)doDiscard(p,i);return}
   if(a.act==='win'){if(canWinStruct(P.hand,G.h.wealth,4-P.melds.length))winSelf(p);return}
   if(a.act==='angang'){if(counts(P.hand)[a.t]===4)doAnGang(p,a.t);return}
-  if(a.act==='jiagang'){const m=P.melds[a.mi];if(m&&m.type==='peng'&&P.hand.includes(a.t))jiaGangFlow(p,a.mi,a.t);return}
+  if(a.act==='jiagang'){const m=P.melds[a.mi];if(m&&m.type==='peng'&&m.tiles[0]===a.t&&P.hand.includes(a.t))jiaGangFlow(p,a.mi,a.t);return}
 };
 if(!NETON())newGame(MODE);
 else if(Net.isHost){

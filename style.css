@@ -255,155 +255,138 @@ button.tile{padding:0}
 #rotateTip #tipGo{margin-top:14px;padding:.5rem 1.1rem;font-family:inherit;font-size:.85rem;background:#1d3f6e;color:#ffefaa;border:2px solid #f3d576;border-radius:6px;cursor:pointer}
 #rotateTip #tipGo:active{transform:scale(.96)}
 @keyframes rotHint{0%,20%{transform:rotate(0)}55%,100%{transform:rotate(90deg)}}
-/* ---------- 手机模式：JS 检测 UA/屏幕后加 .mobile-mode，不依赖 CSS orientation 查询 ---------- */
-body.mobile-mode{overflow:hidden;background:#e8ddc2}
-body.mobile-mode .pixel-header,
-body.mobile-mode .blackboard,
-body.mobile-mode .teacher,
-body.mobile-mode .window,
-body.mobile-mode .back-classroom,
-body.mobile-mode .front-classroom,
-body.mobile-mode .actions,
-body.mobile-mode .scanlines,
-body.mobile-mode #rotateTip{display:none !important}
-body.mobile-mode .classroom{min-height:100vh;background:#e8ddc2;overflow:hidden}
-body.mobile-mode .classroom:before{height:52%;transform-origin:bottom;transform:perspective(360px) rotateX(8deg) scale(1.08)}
-body.mobile-mode .classroom:after{opacity:.25}
-/* 顶部信息条（财神/牌墙/骰子）固定在屏幕顶部 */
-body.mobile-mode .table-meta{
-  display:flex !important;
-  position:fixed;top:2px;left:50%;transform:translateX(-50%);z-index:20;
+/* v2: keep the school's blue-rim desks and make the game usable at actual size. */
+:root{--ink:#17305d;--gold:#f4c65a;--blue:#50acd5;--paper:#f8f0db}
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+button,a,[role=tab]{touch-action:manipulation}
+button{font:inherit;cursor:pointer}
+button:disabled{cursor:default;opacity:.55}
+button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #59c8ff;outline-offset:4px}
+button:active:not(:disabled),.start-btn:active{transform:translateY(2px)}
+[hidden]{display:none!important}
+.cover-page{overflow:auto;background:var(--ink)}
+.cover-wrap{height:auto;min-height:100svh;padding:32px 18px;overflow:visible;background-attachment:fixed}
+.cover-wrap:before{display:none}
+.cover-card{width:min(540px,100%);padding:28px 32px;animation:none;outline:2px solid #17345d;border:3px solid #f5d271;box-shadow:7px 7px #08162f;background:#17305df5}
+.cover-card h1{font-size:clamp(38px,8vw,58px);margin:16px 0 8px}
+.cover-card .tiny{font-size:9px;letter-spacing:2px}
+.tagline{font-size:18px;margin:12px 0 6px}.lobby-sub{font-size:12px;color:#bdd8ed;margin:0 0 24px}
+.entry-tabs{display:flex;border-bottom:1px solid #7092b8;gap:8px;margin-bottom:24px}
+.entry-tabs button{flex:1;background:transparent;color:#bdd8ed;border:0;padding:12px 8px;border-bottom:3px solid transparent}
+.entry-tabs button[aria-selected=true]{color:#ffe39a;border-bottom-color:#f4c65a;font-weight:bold}
+.mode-select{border:0;padding:0;margin:0 0 20px;display:flex;gap:10px;text-align:left}
+.mode-select legend{font-size:12px;color:#bdd8ed;margin-bottom:10px}
+.mode-select label{flex:1;border:1px solid #6a86a8;padding:12px 8px;display:flex;align-items:flex-start;gap:6px;cursor:pointer;background:#0c2444}
+.mode-select label:has(input:checked){border-color:#f4c65a;background:#294766}
+.mode-select input{accent-color:#f4c65a;margin:3px 0 0}.mode-select span{font-size:14px}.mode-select small{display:block;font-size:10px;color:#c0d4e7;margin-top:6px}
+.field-label{display:block;text-align:left;font-size:12px;color:#c0d4e7;margin-bottom:8px}
+.lobby-input{min-width:0;width:100%;padding:13px 12px;font-size:16px;background:#0b2443;border:1px solid #6986a6;color:#fff9df;border-radius:2px}
+.lobby-input::placeholder{color:#a6bacd}
+.cover-card .lobby-primary{width:100%;margin:14px 0 0;padding:14px 10px;box-shadow:3px 3px #081b32;font-size:15px;border:0}
+.join-divider{font-size:11px;color:#bbd4e7;margin:22px 0 12px}
+.join-row{display:flex;align-items:stretch;gap:10px}.join-row .start-btn{margin:0;min-width:72px;padding:12px;box-shadow:3px 3px #081b32}
+#roomCode{text-transform:uppercase;letter-spacing:2px}.lobby-help{font-size:11px;color:#bbd4e7;margin:16px 0 0}.inline-error{font-size:12px;color:#ffb5a1;text-align:left;margin:8px 0 0;min-height:0}.inline-error:empty{display:none}
+.solo-description{font-size:14px;line-height:1.9;color:#d7e6f1;margin:26px 0}
+.lobby-rules{text-align:left;margin-top:24px;padding-top:18px;border-top:1px dashed #7185a1;font-size:12px;color:#c0d4e7;line-height:1.8}.lobby-rules summary{cursor:pointer;color:#ffdf91}.lobby-rules p{margin-bottom:0}.credit{font-size:8px;margin:24px 0 0;line-height:1.8}
+/* The table is one real asset depicting four separate desks. No felt overlay. */
+body.game-page .classroom{height:calc(100dvh - 56px)!important;min-height:0!important;overflow:hidden;background:#e9e1c9}
+body.game-page .pixel-header{display:flex!important;min-height:56px;height:56px;gap:12px;padding:0 max(12px,env(safe-area-inset-left));border-bottom-width:3px;z-index:28}
+body.game-page .pixel-header b{font-size:20px;white-space:nowrap}
+body.game-page .pixel-header>div{display:flex;gap:8px;margin-left:auto}
+body.game-page .pixel-header button{font-size:12px;padding:8px 10px;min-height:34px;box-shadow:2px 2px #091c35}
+body.game-page .desk-table{position:relative!important;left:auto!important;top:auto!important;width:min(1150px,98vw)!important;height:calc(100dvh - 112px)!important;margin:50px auto 0!important;min-height:0!important;transform:none!important;overflow:visible}
+.joined-desks{position:absolute;inset:45px 105px 82px;background:url('school-desks.png') center/100% 100% no-repeat;box-shadow:6px 10px 0 #23384b26;border-radius:8px;z-index:0}
+body.game-page .center-board{inset:24% 28% 37%;background:transparent;border:0;border-radius:0;box-shadow:none;overflow:visible}
+body.game-page .center-board b{bottom:45%;font-size:12px;opacity:.9;white-space:nowrap}
+body.game-page .dz{max-height:90px;gap:3px;overflow:auto;scrollbar-width:thin}
+body.game-page .dz-t{top:-25px;width:95%;max-height:65px}
+body.game-page .dz-b{bottom:-15px;width:95%;max-height:65px}
+body.game-page .dz-l{left:-70px;top:45%;width:42%;max-height:120px}
+body.game-page .dz-r{right:-70px;top:45%;width:42%;max-height:120px}
+body.game-page .o-top{top:-20px;max-width:65%}.o-top .backs{max-width:220px}
+body.game-page .o-left,body.game-page .o-right{top:37%;max-width:90px}
+body.game-page .opp .avatar{width:52px;height:64px;border-width:2px}
+body.game-page .blackboard,body.game-page .teacher,body.game-page .back-classroom,body.game-page .front-classroom,body.game-page .window{display:none!important}
+body.game-page .table-meta{display:flex!important;position:absolute;top:6px;left:50%;z-index:16;max-width:95vw}
+body.game-page .game-info{font-size:12px;padding:3px 12px;gap:10px;border-width:2px;box-shadow:none;white-space:nowrap}
+body.game-page .wealth-box .mtile{width:22px;height:30px}.dice-box{font-size:20px!important}
+body.game-page .hand-area{bottom:0;width:100%;padding:0 14px 8px;z-index:17}
+body.game-page .hand-area #statusText{position:static;transform:none;white-space:normal;margin:4px auto 8px;max-width:760px;font-size:12px;color:var(--ink);text-shadow:none;border:0;background:#f8f0dce8;padding:6px 10px;border-radius:3px;min-height:28px}
+body.game-page .hand-col{gap:4px;max-width:calc(100% - 68px)}
+body.game-page .hand{padding:14px 6px 5px;gap:4px;min-height:84px;overflow:visible}
+body.game-page .hand .tile{width:42px;height:62px;flex-basis:42px;touch-action:manipulation}
+body.game-page .melds-row{min-height:0;gap:4px}
+.hand-controls{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;flex-wrap:wrap;color:var(--ink)}
+body.game-page .hand-controls #tileHint{font-size:12px;line-height:1.4;flex-basis:100%;margin:0;min-height:18px;color:#263b50;text-shadow:none;position:static;transform:none;border:0;background:transparent;white-space:normal}
+.hand-controls button{font-size:13px;padding:10px 18px;border:2px solid #254c70;background:#e9f4fa;color:#193852;min-height:42px;font-weight:bold;box-shadow:2px 2px #647d8c}
+.hand-controls #discardBtn{background:#f4c65a;border-color:#725327;min-width:155px}
+body.game-page .my-score{top:0;left:12px;font-size:12px}
+body.game-page .hint-bar{top:auto;bottom:230px;min-width:220px;max-width:90%;z-index:24}
+body.game-page .hint-bar button{min-height:42px;font-size:14px;padding:8px 14px;animation:none}
+body.game-page .flower-rack{flex-basis:58px;min-height:64px;background:#234e71;border-width:1px}
+body.game-page .actions{display:none!important}
+body.game-page #netStatus{position:static;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#c1e1f7;background:none}
+#modal{z-index:60}.mbox{max-height:88dvh;max-width:min(560px,94vw);padding:22px}
+.rules-dialog{width:min(480px,92vw);max-height:85dvh;padding:26px;background:#17305d;color:#ffefaa;border:3px solid #f4c65a;font-size:14px;line-height:1.8}
+.rules-dialog::backdrop{background:#091428bb}.rules-dialog h2{margin-top:0;font-size:23px}.rules-dialog h3{font-size:15px;color:#9fd0ff;margin-bottom:0}.rules-dialog button{background:#f4c65a;color:#562e22;border:0;padding:12px 18px;width:100%;font-weight:bold;margin-top:12px}
+#netDiag{white-space:pre-wrap;word-break:break-word}.scanlines{opacity:.035}
+@media(hover:hover) and (pointer:fine){.hand .tile:hover{transform:translateY(-5px)}.hand .tile.selected:hover{transform:translateY(-12px)}}
+@media(max-width:600px){
+ .cover-wrap{padding:18px 12px}.cover-card{padding:22px 20px}.cover-card h1{font-size:42px}.tagline{font-size:16px}.mode-select span{font-size:13px}
+ body.game-page .pixel-header{gap:8px;height:52px;min-height:52px;flex-wrap:nowrap;padding:0 10px}
+ body.game-page .pixel-header b{font-size:16px}body.game-page .pixel-header a{font-size:12px}body.game-page .pixel-header button{font-size:11px;padding:7px 9px}
+ #uploadMusic{display:none}body.game-page #netStatus{position:fixed;top:88px;left:8px;right:auto;max-width:200px;font-size:10px;color:#17305d;z-index:25;background:#f8f0dce8;padding:2px 5px}
+ body.game-page #handNo{font-size:10px;white-space:nowrap}body.game-page .pixel-header>div{gap:5px}
+ body.game-page .classroom{height:calc(100dvh - 52px)!important}
+ body.game-page .desk-table{height:calc(100dvh - 95px)!important;margin:43px auto 0!important;width:100%!important}
+ .joined-desks{inset:36px 20px 235px;border-radius:3px;box-shadow:3px 5px #23384b26}
+ body.game-page .o-top{top:0;gap:1px;max-width:65%}.o-top .avatar{width:28px;height:34px}.o-top .opp-main{gap:4px}.o-top .omelds{min-height:0}
+ body.game-page .o-left,body.game-page .o-right{top:27%;max-width:58px}.o-left{left:0}.o-right{right:0}
+ body.game-page .opp .avatar{width:34px;height:42px}body.game-page .oscore{font-size:9px;padding:3px 5px;border-width:1px}
+ body.game-page .backs{max-width:52px}.backs .tile.back{width:7px;height:10px;flex-basis:7px}
+ body.game-page .center-board{inset:95px 76px 310px}
+ body.game-page .center-board b{bottom:40%;font-size:10px;padding:3px 6px}
+ body.game-page .dtile{width:18px;height:25px}.dtile .wan .num,.dtile .wan .suit{font-size:9px}
+ body.game-page .dz-t{top:-15px;max-height:52px}.dz-b{bottom:-30px!important;max-height:52px!important}
+ body.game-page .dz-l{left:-18px;max-height:75px;width:40%}.dz-r{right:-18px;max-height:75px;width:40%}
+ body.game-page .hand-area{position:absolute;bottom:0;padding:8px 10px max(10px,env(safe-area-inset-bottom));background:#eee5d1f5;border-top:2px solid #6fb2cc}
+ body.game-page .hand-area #statusText{font-size:11px;line-height:1.5;margin:12px 0 4px;min-height:28px;padding:4px 6px;background:transparent}
+ body.game-page .hand-row{gap:5px}.hand-row .flower-rack{flex-basis:40px;min-height:45px;padding:2px}
+ body.game-page .hand-col{max-width:calc(100% - 43px);flex:1}
+ body.game-page .hand{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));width:min(330px,100%);gap:4px;padding:12px 3px 4px;min-height:0}
+ body.game-page .hand .tile{width:100%;height:52px;min-width:0;border-width:2px;box-shadow:1px 2px #643c24}
+ body.game-page .hand .tile .wan .num{font-size:20px}body.game-page .hand .tile .wan .suit{font-size:18px}
+ body.game-page .hand .tile .feng,body.game-page .hand .tile .zhong,body.game-page .hand .tile .fa{font-size:24px}
+ body.game-page .hand .tile .tong{grid-template-columns:repeat(3,6px);gap:2px}.hand .tile .tong i{width:6px;height:6px;border-width:1px}
+ body.game-page .hand .tile .tiao{grid-template-columns:repeat(3,4px);gap:2px}.hand .tile .tiao i{width:4px;height:12px}
+ body.game-page .hint-bar{bottom:274px;gap:5px}body.game-page .hint-bar button{font-size:12px;padding:7px 12px;min-height:40px}
+ .hand-controls{gap:8px;margin-top:4px}.hand-controls button{padding:9px 14px;min-height:40px}.hand-controls #discardBtn{min-width:150px}
+ body.game-page .hand-controls #tileHint{font-size:11px;min-height:16px}
+ body.game-page .my-score{top:0;left:10px;padding:2px 7px;font-size:10px}
+ body.game-page .table-meta{top:4px}.game-info small{font-size:10px!important}body.game-page .game-info{font-size:11px;gap:7px;padding:2px 7px}body.game-page .wealth-box .mtile{width:17px;height:24px}
+ .mbox{padding:18px 14px}.seats{gap:6px}.seat{width:calc(25% - 6px);padding:8px 2px}.seat-avatar{width:32px;height:32px}.seat-name{font-size:11px}.seat-status{font-size:9px}
 }
-body.mobile-mode .game-info{font-size:.52rem;padding:.15rem .4rem;gap:4px;max-width:min(360px,92vw)}
-body.mobile-mode .wealth-box{gap:4px}
-body.mobile-mode .wealth-box .mtile{width:14px;height:21px}
-body.mobile-mode .wealth-box .mtile .wan .num{font-size:9px}
-body.mobile-mode .wealth-box .mtile .wan .suit{font-size:8px}
-body.mobile-mode .dice-box{font-size:14px;padding:1px 5px}
-body.mobile-mode .o-top{top:44px;max-width:60%;gap:2px}
-body.mobile-mode .o-top .avatar{width:48px;height:60px}
-body.mobile-mode .o-top .oscore{font-size:.55rem;padding:.1rem .35rem}
-body.mobile-mode .o-top .omelds{min-height:28px}
-body.mobile-mode .dz-t{top:86px;max-height:48px;width:50%}
-/* 网络状态在手机端显示在信息条右侧 */
-body.mobile-mode #netStatus{position:fixed;top:4px;right:4px;font-size:.5rem;color:#9fd0ff;z-index:21;background:#0b1d3d88;padding:1px 4px;border-radius:3px;max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* 牌桌固定居中，JS 计算 scale 缩放铺满屏幕 */
-body.mobile-mode .desk-table{
-  position:fixed !important;top:50% !important;left:50% !important;
-  width:1000px !important;height:640px !important;min-height:auto !important;
-  margin:0 !important;max-width:none !important;z-index:10;
-  transform-origin:center center;
+@media(max-height:520px) and (min-width:601px){
+ body.game-page .pixel-header{height:42px;min-height:42px}body.game-page .classroom{height:calc(100dvh - 42px)!important}
+ body.game-page .desk-table{height:calc(100dvh - 75px)!important;margin:33px auto 0!important}.joined-desks{inset:25px 80px 60px}
+ body.game-page .table-meta{top:2px}.game-info{max-height:30px}.wealth-box .mtile{height:23px!important}
+ body.game-page .o-top{top:-12px}.o-top .avatar{width:25px!important;height:30px!important}.o-top .omelds{min-height:0}
+ body.game-page .hand-area #statusText{margin:0;font-size:10px;padding:2px}.hand-controls{margin-top:2px}.hand-controls #tileHint{flex-basis:auto!important;max-width:280px;font-size:10px!important}.hand-controls button{padding:5px 12px;min-height:32px;font-size:11px}
+ body.game-page .hand{min-height:0;padding:10px 4px 3px;gap:3px}.hand .tile{height:49px!important;width:34px!important;flex-basis:34px!important}.hand .tile .wan .num{font-size:18px!important}.hand .tile .wan .suit{font-size:16px!important}
+ body.game-page .hint-bar{bottom:145px}.hint-bar button{min-height:32px!important;font-size:12px!important;padding:5px 12px!important}
+ body.game-page .center-board{inset:22% 30% 40%}.opp .avatar{width:36px!important;height:44px!important}
 }
-/* ---------- 旧版 CSS 媒体查询保留做兜底 ---------- */
-@media(max-width:920px) and (orientation:landscape){
-  body.game-page{overflow:hidden}
-  .pixel-header,.blackboard,.teacher,.window,.back-classroom,.front-classroom,.actions{display:none}
-  .desk-table{
-    position:fixed;top:50%;left:50%;width:1000px;height:640px;min-height:auto;
-    margin:0;max-width:none;z-index:10;
-    transform-origin:center center
-  }
-  .table-meta{display:none}
-  .opp .avatar{width:48px;height:60px}
-  .o-left{left:10px}.o-right{right:10px}
-  .oscore{font-size:.62rem;padding:.15rem .4rem}
-  .backs .tile.back{width:10px;height:16px;flex-basis:10px}
-  .mtile{width:20px;height:28px}.dtile{width:18px;height:24px}
-  .center-board{inset:14% 22% 28% 22%}
-  .hand-area{bottom:3%;width:100%}
-  .hand{gap:1px;padding:3px}
-  .tile{width:34px;height:52px;flex:0 0 34px;border-width:2px}
-  .tile .wan .num{font-size:15px}.tile .wan .suit{font-size:14px}
-  .tile .feng,.tile .zhong,.tile .fa{font-size:18px;line-height:46px}
-  .tile .tiao{grid-template-columns:repeat(3,4px)}.tile .tiao i{height:12px;width:4px}
-  .tile .tong{grid-template-columns:repeat(3,7px)}.tile .tong i{height:7px;width:7px}
-  .tile .bai{width:22px;height:32px}.tile .bai i{width:15px;height:21px}
-  .flower-rack{flex-basis:48px;min-height:60px}
-  .hint-bar{top:56%}
-  .hint-bar button{padding:.35rem .65rem;font-size:.78rem}
-  .my-score{top:-24px;font-size:.65rem}
-  .mbox{padding:1rem 1.1rem}
-}
-/* 联机对局可操作性与碰吃布局修复 */
-.hand-col{gap:10px;min-width:0}
-.melds-row{min-height:72px;align-items:flex-end;padding:4px 0;position:relative;z-index:2;overflow:visible}
-.meld{position:relative;z-index:1;pointer-events:none}
-.hand{position:relative;z-index:4;min-height:70px;align-items:flex-end}
-.hand .tile{position:relative;z-index:5;touch-action:manipulation}
-.tile:hover{transform:none}
-@media (hover:hover){.tile:hover{transform:translateY(-8px)}}
-@media (max-width:700px){.melds-row{min-height:58px;padding:2px 0}.hand{min-height:56px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
-/* 出牌交互反馈：短按确认，拖动时取消选中，避免误出牌 */
-.hand .tile{touch-action:none;transition:transform .12s ease,box-shadow .12s ease,filter .12s ease}
-.hand .tile.selected{transform:translateY(-12px);filter:brightness(1.08);box-shadow:2px 4px #643c24,0 0 0 3px #ffd94d,0 0 14px #ffd94d99}
-.hand .tile:focus-visible{outline:3px solid #9fd0ff;outline-offset:2px}
-@media(max-width:700px){
-  .dtile{width:23px;height:32px}
-  .dz-t{top:26px;width:66%;max-height:68px}
-  .dz-b{bottom:6px;width:74%}
-  .dz-l{left:8px;width:39%;max-height:156px}
-  .dz-r{right:8px;width:39%;max-height:156px}
+.hand .tile.selected{transform:translateY(-10px);box-shadow:1px 3px #643c24,0 0 0 3px #ffd94d;filter:brightness(1.04)}
+body.game-page .table-meta{right:auto;transform:translateX(-50%)}
+/* Keep the reference desk proportions at every viewport. */
+body.game-page .joined-desks{inset:auto;left:50%;top:45px;transform:translateX(-50%);width:min(calc(100% - 210px),calc((100dvh - 240px)*1.5));height:auto;aspect-ratio:3/2}
+@media(max-width:600px){
+ body.game-page .joined-desks{top:clamp(40px,calc((100dvh - 620px)/2),120px);width:calc(100% - 40px);height:auto;aspect-ratio:3/2}
+ body.game-page .o-top{top:clamp(0px,calc((100dvh - 700px)/2),60px)}
+ body.game-page .o-left,body.game-page .o-right{top:30%}
+ body.game-page .center-board{top:clamp(70px,calc((100dvh - 550px)/2),150px);bottom:auto;height:160px;left:76px;right:76px}
 }
-
-/* ---------- 清晰对局布局：桌面端与微信/Chrome 使用同一套画面 ---------- */
-body.game-page:not(.mobile-mode){overflow:hidden}
-body.game-page:not(.mobile-mode) .pixel-header{height:44px;padding:0 2vw}
-body.game-page:not(.mobile-mode) .pixel-header b{font-size:1.2rem}
-body.game-page:not(.mobile-mode) .pixel-header a{font-size:.78rem}
-body.game-page:not(.mobile-mode) .pixel-header button{padding:.4rem .55rem;font-size:.68rem}
-body.game-page:not(.mobile-mode) .classroom{min-height:calc(100vh - 44px);height:calc(100vh - 44px);overflow:hidden}
-body.game-page:not(.mobile-mode) .blackboard{top:6px;width:min(360px,34vw);height:48px;padding:7px;font-size:8px;line-height:1.45}
-body.game-page:not(.mobile-mode) .blackboard small{display:none}
-body.game-page:not(.mobile-mode) .teacher{top:58px;transform:translateX(-50%) scale(.72);transform-origin:top center}
-body.game-page:not(.mobile-mode) .teacher-bubble{display:none}
-body.game-page:not(.mobile-mode) .window,body.game-page:not(.mobile-mode) .back-classroom,body.game-page:not(.mobile-mode) .front-classroom{display:none}
-body.game-page:not(.mobile-mode) .table-meta{top:78px}
-body.game-page:not(.mobile-mode) .desk-table{margin:112px auto 0;width:min(1600px,96vw);height:min(calc(100vh - 160px),980px);min-height:0}
-body.game-page:not(.mobile-mode) .center-board b{bottom:10%;font-size:1rem;padding:.4rem 1rem}
-body.game-page:not(.mobile-mode) .hand-area{bottom:2.5%;padding:0 20px}
-body.game-page:not(.mobile-mode) .hand-area p{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin:0 0 8px;padding:5px 14px;background:#17305dcc;border:2px solid #f3d576;border-radius:6px;white-space:nowrap;z-index:25;font-size:.9rem}
-body.game-page:not(.mobile-mode) .hand{gap:4px;padding:8px}
-body.game-page:not(.mobile-mode) .tile{width:48px;height:72px;flex-basis:48px}
-body.game-page:not(.mobile-mode) .tile .wan .num{font-size:25px}
-body.game-page:not(.mobile-mode) .tile .wan .suit{font-size:22px}
-body.game-page:not(.mobile-mode) .tile .feng,body.game-page:not(.mobile-mode) .tile .zhong,body.game-page:not(.mobile-mode) .tile .fa{font-size:29px}
-body.game-page:not(.mobile-mode) .flower-rack{flex-basis:76px;min-height:88px}
-body.game-page:not(.mobile-mode) .opp .avatar{width:72px;height:90px}
-
-/* 手机仍保留一点黑板和老师，但不再占用牌桌操作空间 */
-body.mobile-mode .blackboard{display:block !important;position:fixed;top:2px;left:50%;width:240px;height:28px;padding:3px;transform:translateX(-50%);font-size:6px;line-height:1.2;z-index:25}
-body.mobile-mode .blackboard small{display:none}
-body.mobile-mode .teacher{display:block !important;position:fixed;top:31px;left:10px;transform:scale(.52);transform-origin:top left;z-index:25}
-body.mobile-mode .teacher-bubble{display:none}
-body.mobile-mode .desk-table{top:calc(50% + 14px) !important}
-body.mobile-mode .center-board b{bottom:8%;font-size:.82rem;padding:.25rem .55rem}
-body.mobile-mode .hand-area p{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin:0 0 6px;padding:4px 10px;background:#17305dcc;border:2px solid #f3d576;border-radius:5px;white-space:nowrap;z-index:25;font-size:.72rem}
-
-/* 对手隐藏手牌不在桌面铺开：只显示弃牌、碰吃杠和补花；胡牌结算时再展示牌面 */
-body.game-page .opp .backs{display:none !important}
-
-/* 信息区重新布局：黑板更易读，牌局信息移到右上角避免遮挡座位姓名 */
-body.game-page:not(.mobile-mode) .blackboard{
-  top:8px;width:min(460px,42vw);height:68px;padding:12px 16px;
-  font-size:12px;line-height:1.5
-}
-body.game-page:not(.mobile-mode) .teacher{top:80px}
-body.game-page:not(.mobile-mode) .table-meta{
-  top:10px;right:18px;left:auto;transform:none;
-  max-width:min(430px,42vw)
-}
-body.game-page:not(.mobile-mode) .game-info{
-  gap:14px;padding:.55rem 1rem;font-size:.92rem
-}
-body.game-page:not(.mobile-mode) .wealth-box .mtile{width:32px;height:46px}
-body.game-page:not(.mobile-mode) .dice-box{font-size:24px;padding:3px 10px}
-
-body.mobile-mode .blackboard{
-  width:280px;height:38px;padding:6px;font-size:7px;line-height:1.3
-}
-body.mobile-mode .teacher{top:43px}
-body.mobile-mode .table-meta{
-  top:4px;right:4px;left:auto;transform:none;max-width:62vw
-}
-body.mobile-mode .game-info{font-size:.62rem;padding:.25rem .5rem;gap:5px}
+@media(max-height:520px) and (min-width:601px){body.game-page .joined-desks{top:25px;width:min(calc(100% - 160px),calc((100dvh - 150px)*1.5))}}
+body.game-page .classroom:before,body.game-page .classroom:after{display:none}

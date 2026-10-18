@@ -22,20 +22,17 @@
     },
     updateDiag(){
       const el=document.getElementById('netDiag');if(!el)return;
-      el.innerHTML='<b>联机诊断</b><br>'+
-        'ws: '+this.diag.ws+'<br>'+
-        'state: '+this.diag.state+'<br>'+
-        'in: '+this.diag.seqIn+' '+this.diag.lastIn+'<br>'+
-        'out: '+this.diag.seqOut+' '+this.diag.lastOut+(this.diag.err?'<br><span style="color:#ff9b9b">'+this.diag.err+'</span>':'');
+      el.textContent='连接：'+this.diag.ws+'\n状态：'+this.diag.state+(this.diag.err?'\n'+this.diag.err:'');
     },
 
     init(params){
       const room=(params.get('room')||'').trim().toUpperCase();
       const role=params.get('role')||params.get('net');
       if(!room||!role)return;
+      if(!/^[A-Z0-9]{4,8}$/.test(room)||!['host','client'].includes(role)){location.replace('index.html');return;}
       this.active=true;this.room=room;this.isHost=(role==='host');
       this.mode=params.get('mode')==='ju'?'ju':'p8';
-      this.myName=decodeURIComponent(params.get('name')||'玩家').slice(0,8)||'玩家';
+      this.myName=(params.get('name')||'玩家').slice(0,8)||'玩家';
       this.names=[this.isHost?this.myName:'房主',null,null,null];
       if(!this.isHost)this.pid=-1;
       this.token='';this._joined=false;this._fatal=false;this._dc={};
@@ -54,7 +51,6 @@
       /* 优先级：链接显式 ws 参数 > localStorage 调试覆盖 > 同源默认 */
       let u=params.get('ws');
       if(u){
-        u=decodeURIComponent(u);
         if(!/^wss?:\/\//i.test(u)) u=(location.protocol==='https:'?'wss://':'ws://')+u;
         return u;
       }
@@ -117,7 +113,7 @@
       const el=document.getElementById('lobbyList');
       if(el)el.innerHTML='<p style="color:#ffb3b3;font-size:.82rem;line-height:1.6">⚠ '+msg+'</p>';
       this.diag.err=msg;this.updateDiag();
-      alert(msg);
+      const cancel=document.getElementById('netCancel');if(cancel)cancel.textContent='返回大厅重新进入';
     },
 
     onHostOpen(){
@@ -223,6 +219,7 @@
 
       // 客户端收到房主/服务器消息
       if(!this.isHost && data.type==='welcome'){
+        if(data.mode)this.mode=data.mode;
         this.pid=data.pid;this.names=(data.names||this.names).slice();
         if(data.token)this.token=data.token;
         try{sessionStorage.setItem('jw-net-token-'+this.room,this.token);}catch(e){}
@@ -340,6 +337,7 @@
         for(let q=0;q<4;q++){
           if(q!==pid)state.h.P[q].hand=new Array(state.h.P[q].hand.length).fill('白');
         }
+        if(state.h.turn!==pid)state.h.drawn=null;
         this.broadcast({type:'state',G:state,toPid:pid,seq:++this.diag.seqOut});
       };
       if(targetPid!=null){
@@ -387,7 +385,7 @@
           '<button id="copyRoom" style="padding:.35rem .6rem;font-size:.7rem">复制房间号</button></div></div>'
           :'<p style="margin:.5rem 0;display:flex;gap:8px;justify-content:center"><button id="copyRoom" style="padding:.35rem .7rem;font-size:.72rem">复制房间号</button></p>')+
         '<div id="lobbyList">等待连接…</div>'+
-        '<div id="netDiag" style="margin-top:.6rem;padding:.4rem;background:#0b1d3d88;border:1px dashed #4a7ab8;border-radius:6px;font-size:.6rem;color:#cfe8ff;text-align:left;line-height:1.6"></div>'+
+        '<details style="margin-top:14px;font-size:11px;color:#cfe8ff"><summary>连接详情</summary><div id="netDiag"></div></details>'+
         (this.isHost?'<p style="font-size:.65rem;color:#cfe8ff">把邀请链接发给好友，人满或 1 人以上即可开始</p>':
           '<p style="font-size:.65rem;color:#cfe8ff">等待房主开始游戏…</p>');
       btns.innerHTML=this.isHost?
@@ -443,7 +441,7 @@
         const avatar=isHostSeat?'👑':(empty?'+':String.fromCharCode(0x2460+i));
         return '<div class="seat '+(isHostSeat?'host ':'')+(empty?'empty ':'')+(isMe?'me':'')+'" data-seat="'+i+'">'+
           '<div class="seat-avatar">'+avatar+'</div>'+
-          '<div class="seat-name">'+(empty?'空位':n)+'</div>'+
+          '<div class="seat-name">'+(empty?'空位':escapeHTML(n))+'</div>'+
           '<div class="seat-status">'+status+(isMe?'（你）':'')+'</div>'+
           (isMe?'<button class="seat-edit">改名</button>':'')+
           '</div>';

@@ -25,7 +25,7 @@ function canWinStruct(tiles,wealth,needSets){
 /* 一对将 + needSets 组刻/顺（财神百搭补位） */
 function winStandard(c,jk,needSets){
   for(const k in c){if(c[k]>=2){c[k]-=2;if(decompose(c,jk))return true;c[k]+=2}}
-  if(jk>=1)for(const k in c){c[k]--;if(decompose(c,jk-1))return true;c[k]++}
+  if(jk>=1)for(const k in c){if(c[k]<1)continue;c[k]--;if(decompose(c,jk-1))return true;c[k]++}
   if(jk>=2&&decompose(c,jk-2))return true;
   return false;
 }
@@ -37,9 +37,16 @@ function decompose(c,jk){
   if(c[k]>=3){c[k]-=3;if(decompose(c,jk))return true;c[k]+=3}
   if(c[k]>=2&&jk>=1){c[k]-=2;if(decompose(c,jk-1))return true;c[k]+=2}
   if(c[k]>=1&&jk>=2){c[k]--;if(decompose(c,jk-2))return true;c[k]++}
-  if(s&&n<=7){
-    const a=(n+1)+s,b=(n+2)+s,need=(c[a]>0?0:1)+(c[b]>0?0:1);
-    if(jk>=need){c[k]--;const ta=c[a]>0,tb=c[b]>0;if(ta)c[a]--;if(tb)c[b]--;if(decompose(c,jk-need))return true;c[k]++;if(ta)c[a]++;if(tb)c[b]++}
+  if(s){
+    // 最小实牌也可以在顺子的中间或末尾，例如 财神+8万+9万。
+    for(let start=Math.max(1,n-2);start<=Math.min(n,7);start++){
+      const seq=[start+s,(start+1)+s,(start+2)+s];
+      const used=seq.filter(t=>c[t]>0),need=3-used.length;
+      if(jk<need)continue;
+      used.forEach(t=>c[t]--);
+      if(decompose(c,jk-need))return true;
+      used.forEach(t=>c[t]++);
+    }
   }
   return false;
 }
@@ -111,7 +118,7 @@ function scoreWin(ctx){
   const detail=[];let base=0,type='';
   if(needSets===4&&winThirteen(tiles.filter(t=>t!==wealth),tiles.filter(t=>t===wealth).length)){type='十三烂';base=6}
   else if(needSets===4&&winSevenPairs(tiles.filter(t=>t!==wealth),tiles.filter(t=>t===wealth).length)){type='对对胡';base=6}
-  else if(isPengPeng(tiles,wealth)){type='碰碰胡';base=6}
+  else if(ctx.melds.every(m=>m.every(t=>t===m[0]))&&isPengPeng(tiles,wealth)){type='碰碰胡';base=6}
   else{type='平胡';base=2}
   detail.push([type+'（基础分）',base]);
   let extra=0;
