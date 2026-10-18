@@ -433,7 +433,7 @@ else if(Net.isHost){
     };
     const _ra=renderAll;renderAll=function(){_ra();throttledBC();};
     const _sm=showModal;showModal=function(html,btns){_sm(html,btns);Net.broadcast({type:'modal',html,final:!!(btns&&btns.length&&btns[0].label==='再来一局')})};
-    const _note=note;note=function(x){_note(x);Net.broadcast({type:'notify',text:x})};
+    const _note=note;note=function(x){_note(x);if(!/^(轮到你|请出牌|庄家开局|可以 |已选择|⚠ 财神)/.test(x))Net.broadcast({type:'notify',text:x})};
     newGame(mode);
     /* 立即广播一次让客户端能马上看到开局状态 */
     setTimeout(()=>{try{Net.broadcastState();}catch(e){}},50);

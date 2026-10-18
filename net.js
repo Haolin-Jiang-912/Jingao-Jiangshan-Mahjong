@@ -210,6 +210,7 @@
         try{sessionStorage.setItem('jw-net-token-'+this.room,this.token);}catch(e){}
         this.names=(data.names||this.names).slice();
         this._joined=true;
+        this.status('房间 '+this.room+' · 已连接');
         if(G&&G.h){
           this.status('已重新连接，同步牌局…');
           setTimeout(()=>{try{this.broadcastState();}catch(e){}},300);
@@ -261,6 +262,7 @@
           if(this._syncTimer&&G&&G.h){clearInterval(this._syncTimer);this._syncTimer=null;}
           if(typeof renderAll==='function'){
             renderAll();
+            if(G.h.turn!==0&&$('#actionBar').hidden)note('等待 '+NAMES[G.h.turn]+' 行牌');
             const m=document.getElementById('modal');
             if(m&&m.classList.contains('show')&&!G.h.over)m.classList.remove('show');
           }
@@ -413,8 +415,7 @@
         const start=document.getElementById('netStart');
         start.onclick=()=>{
           const humans=this.names.filter(Boolean).length;
-          if(humans<2){alert('至少等1位好友加入');return;}
-          if(humans<4&&!confirm('人数不足4人，空位由 AI 补齐，确定开始？'))return;
+          if(humans<2)return;
           for(let i=0;i<4;i++)if(!this.names[i])this.names[i]=DEF_NAMES[i];
           this.broadcastLobby();
           this.started=true;
