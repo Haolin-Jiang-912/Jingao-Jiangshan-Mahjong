@@ -45,7 +45,7 @@ function backTile(){return '<span class="tile back"></span>'}
 function renderHand(){
   const P=G.h.P[0];
   P.hand.sort((a,b)=>valOf(a)-valOf(b));
-  const signature=P.hand.join('|')+':'+G.h.turn+':'+G.hand;
+  const signature=P.hand.join('|')+':'+G.h.turn+':'+G.hand+':'+(G.phase?.id||'');
   if(signature!==handSignature){selectedHandIndex=-1;handSignature=signature;}
   $('#hand').innerHTML=P.hand.map((t,i)=>`<button class="tile ${t===G.h.wealth?'wealth':''} ${i===selectedHandIndex?'selected':''}" data-i="${i}" aria-label="${t}${t===G.h.wealth?'，财神':''}" aria-pressed="${i===selectedHandIndex}">${innerFace(t)}</button>`).join('');
   $('#myMelds').innerHTML=P.melds.map(m=>`<span class="meld ${m.type}">${m.tiles.map(t=>face(t,'mtile')).join('')}</span>`).join('');
@@ -53,16 +53,17 @@ function renderHand(){
   $('#flowers').textContent='花 '+P.flowers.length;
   renderHandControls();
 }
-function canChooseTile(){return !!(G&&G.h&&!G.h.over&&!G.h.turnActionTaken&&G.h.turn===0&&G.h.P[0].hand.length===3*(4-G.h.P[0].melds.length)+2);}
+function canChooseTile(){return !!(G&&G.h&&!G.h.over&&!G.h.turnActionTaken&&G.h.turn===0&&G.h.P[0].hand.length===3*(4-G.h.P[0].melds.length)+2&&(typeof Net==='undefined'||!Net.active||Net.canAct()));}
 function renderHandControls(){
   const b=$('#discardBtn');if(!b)return;
   b.disabled=!canChooseTile()||selectedHandIndex<0;
   const t=G.h.P[0].hand[selectedHandIndex];
-  b.textContent=t?'打出 '+t:'选择一张牌';
-  const hint=$('#tileHint');if(hint)hint.textContent=canChooseTile()?(selectedHandIndex<0?'点选一张手牌，再点「打出」':'已选 '+t+' · 点「打出」确认'):(G.h.over?'本盘结束，查看结算':'等待其他同学行牌');
+  b.textContent=typeof Net!=='undefined'&&Net.active&&Net.pending?'等待确认…':t?(t===G.h.wealth&&G.h.warnWealth?'确认打出财神':'打出 '+t):'选择一张牌';
+  const portrait=typeof matchMedia==='function'&&matchMedia('(orientation:portrait) and (max-width:700px)').matches;
+  const hint=$('#tileHint');if(hint)hint.textContent=canChooseTile()?(selectedHandIndex<0?(portrait?'左右滑动看牌 · 横屏可看全手牌':'点选一张手牌，再点「打出」'):'已选 '+t+' · 点「打出」确认'):(G.h.over?'本盘结束，查看结算':portrait?'左右滑动看牌 · 等待同学行牌':'等待其他同学行牌');
 }
 function selectHandTile(i){
-  if(!canChooseTile())return;
+  if(!canChooseTile()||!Number.isInteger(i)||i<0||i>=G.h.P[0].hand.length)return;
   selectedHandIndex=i;G.h.warnWealth=false;renderHand();
   const hint=$('#tileHint');if(hint)hint.textContent='已选 '+G.h.P[0].hand[i]+' · 点「打出」确认';
 }
@@ -76,10 +77,29 @@ function renderOpp(q){
 function renderDiscards(){
   for(let q=0;q<4;q++){$('#discards-'+q).innerHTML=G.h.discards[q].map(t=>face(t,'dtile')).join('')}
 }
+function dieFace(n){
+  const dots={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+  return dots[n]?`<span class="die-face ${n===1?'die-one':''}" role="img" aria-label="${n}点">${dots[n].map(p=>`<i class="pip p${p}" aria-hidden="true"></i>`).join('')}</span>`:'';
+}
+function renderDice(){
+  const el=$('#diceBox'),d=G.h.dice;
+  if(!el)return;
+  el.disabled=!d?.pairs||d.rolling;
+  if(!d){el.innerHTML='<span class="dice-summary">本盘庄家 '+escapeHTML(NAMES[G.h.dealer])+'</span>';el.title='本盘的骰子未记录，下一盘显示';return;}
+  const [a,b]=d.values;
+  el.innerHTML='<span class="dice-pair">'+dieFace(a)+dieFace(b)+'</span><span class="dice-summary"><small>掷骰定庄</small><strong>'+(d.rolling?'掷骰中…':a+' + '+b+' = '+(a+b)+' 点')+'</strong></span>';
+  el.title=d.rolling?'正在掷骰':'查看四位同学的定庄点数';
+  if($('#diceDialog')?.open)renderDiceDetails();
+}
+function renderDiceDetails(){
+  const d=G?.h?.dice;if(!d?.pairs)return;
+  $('#diceBody').innerHTML='<p>每人掷两颗骰子，总点数最高的同学坐庄。</p><div class="dice-results">'+d.pairs.map((pair,p)=>'<div class="dice-result '+(p===G.h.dealer?'is-dealer':'')+'"><span class="dice-player">'+escapeHTML(NAMES[p])+'</span><span class="dice-pair">'+pair.map(dieFace).join('')+'</span><strong>'+pair[0]+' + '+pair[1]+' = '+(pair[0]+pair[1])+' 点</strong><span class="dealer-badge">'+(p===G.h.dealer?'庄家':'')+'</span></div>').join('')+'</div><p class="dice-explanation">同点时按座位顺序决定。这些点数属于当前这一盘。</p>';
+}
 function renderInfo(){
+  renderDice();
   $('#wealthBox').innerHTML=G.h.ind?`<small>翻牌</small>${face(G.h.ind,'mtile s')}<small>财神</small>${face(G.h.wealth,'mtile s gold')}`:'<small>掷骰定庄中…</small>';
   $('#wallCount').textContent='牌墙 '+G.h.wall.length;
-  $('#turnLabel').textContent=G.h.over?'本盘结束':NAMES[G.h.turn]+' 行牌';
+  $('#turnLabel').textContent=G.h.over?'本盘结束':G.phase?.kind==='claim'||G.phase?.kind==='rob'?'等待吃碰杠胡响应':NAMES[G.h.turn]+' 行牌';
   $('#handNo').textContent=(G.mode==='ju'?'局麻':'第 '+(G.hand+1)+'/8 盘');
 }
 function renderScores(){

@@ -1,11 +1,11 @@
 /* 江山麻将 · 游戏流程与AI（只能自摸 · 可抢杠 · 财神百搭） */
-const DICE='⚀⚁⚂⚃⚄⚅',PRI={'杠':3,'碰':2,'吃':1};
+const PRI={'杠':3,'碰':2,'吃':1};
 let aiTimer=null,diceTimer=null;
 const later=(fn,ms=800)=>{clearTimeout(aiTimer);aiTimer=setTimeout(fn,ms)};
 /* 联机判定：net.js 先于 app.js 加载；test-sim 无 net.js，用 typeof 保护 */
 const NETON=()=>typeof Net!=='undefined'&&Net.active;
 const ISHOST=()=>NETON()&&Net.isHost;
-const ISCLIENT=()=>NETON()&&!Net.isHost;
+const ISCLIENT=()=>NETON()&&(Net.serverAuthoritative||!Net.isHost);
 const REMOTE=(p)=>ISHOST()&&Net.isRemote(p);
 
 function newGame(mode){G={mode,hand:0,scores:mode==='ju'?[30,30,30,30]:[0,0,0,0],specials:[0,0,0,0],over:false,h:null};startHand()}
@@ -18,13 +18,13 @@ function startHand(){
   const sums=pairs.map(p=>p[0]+p[1]);
   let dealer=0;sums.forEach((s,i)=>{if(s>sums[dealer])dealer=i});
   const d2=[1+Math.floor(Math.random()*6),1+Math.floor(Math.random()*6)];
-  G.h={wall:makeDeck(),dealer,turn:dealer,over:false,kongDraw:false,turnCount:0,turnActionTaken:false,
+  G.h={wall:makeDeck(),dealer,turn:dealer,dice:{pairs,values:pairs[dealer],rolling:true},over:false,kongDraw:false,turnCount:0,turnActionTaken:false,
     discards:[[],[],[],[]],ind:null,wealth:null,drawn:null,warnWealth:false,
     P:[0,1,2,3].map(()=>({hand:[],melds:[],flowers:[],piao:0,hasDisc:false,draws:0}))};
   renderAll();note('四人掷骰定庄…');
   let n=0,dealt=false;const iv=diceTimer=setInterval(()=>{
-    $('#diceBox').textContent=DICE[Math.floor(Math.random()*6)]+DICE[Math.floor(Math.random()*6)];sfx('dice');renderAll();
-    if(++n>=5&&!dealt){dealt=true;clearInterval(iv);$('#diceBox').textContent=DICE[d2[0]-1]+DICE[d2[1]-1];
+    G.h.dice.values=[1+Math.floor(Math.random()*6),1+Math.floor(Math.random()*6)];sfx('dice');renderAll();
+    if(++n>=5&&!dealt){dealt=true;clearInterval(iv);G.h.dice.values=pairs[dealer];G.h.dice.rolling=false;
       dealTiles();
       let fi=0;while(fi<G.h.wall.length&&isFlower(G.h.wall[fi]))fi++;
       G.h.ind=G.h.wall[fi];G.h.wealth=nextTile(G.h.ind);
@@ -94,7 +94,7 @@ function onHandClick(i){
     if(G.h.turn!==0||P.hand.length!==3*(4-P.melds.length)+2)return;
     const t=P.hand[i];
     if(t===G.h.wealth&&!G.h.warnWealth){G.h.warnWealth=true;note('⚠ 财神是百搭！再点一次确认打出 —— 若已财吊（听全牌）打出即「飘财」，胡牌翻倍');setTimeout(()=>{if(G&&G.h)G.h.warnWealth=false},4000);return}
-    clearActions();G.h.turnActionTaken=true;Net.sendAction({act:'discard',tile:t});
+    clearActions();G.h.turnActionTaken=true;Net.sendAction({act:'discard',tile:t,confirmWealth:t===G.h.wealth&&G.h.warnWealth===true});
     return;
   }
   if(G.h.turn!==0||P.hand.length!==3*(4-P.melds.length)+2)return;
@@ -106,7 +106,7 @@ function onHandClick(i){
 const handPointer={id:null,index:-1,x:0,y:0,moved:false,suppressClick:false};
 const handEl=$('#hand');
 handEl.addEventListener('pointerdown',e=>{
-  const b=e.target.closest('[data-i]');if(!b)return;
+  const b=e.target.closest('[data-i]');if(!b||handPointer.id!==null||e.isPrimary===false||e.button>0||!canChooseTile())return;
   handPointer.id=e.pointerId;handPointer.index=+b.dataset.i;handPointer.x=e.clientX;handPointer.y=e.clientY;handPointer.moved=false;
   b.classList.add('selected');
   try{handEl.setPointerCapture(e.pointerId)}catch{}
@@ -123,10 +123,13 @@ handEl.addEventListener('pointerup',e=>{
   const idx=handPointer.index,moved=handPointer.moved;
   const b=handEl.querySelector(`[data-i="${idx}"]`);if(b)b.classList.remove('selected');
   handPointer.id=null;handPointer.index=-1;handPointer.moved=false;
-  if(!moved){handPointer.suppressClick=true;selectHandTile(idx);setTimeout(()=>{handPointer.suppressClick=false},350)}
+  handPointer.suppressClick=true;
+  if(!moved)selectHandTile(idx);
+  setTimeout(()=>{handPointer.suppressClick=false},350);
 });
 handEl.addEventListener('pointercancel',()=>{
   handEl.querySelector('.selected')?.classList.remove('selected');handPointer.id=null;handPointer.index=-1;handPointer.moved=false;
+  handPointer.suppressClick=true;setTimeout(()=>{handPointer.suppressClick=false},350);
 });
 handEl.addEventListener('click',e=>{
   if(handPointer.suppressClick){e.preventDefault();return}
@@ -409,41 +412,9 @@ function finalSettle(){
 }
 /* ---------- 启动 ---------- */
 const MODE=new URLSearchParams(location.search).get('mode')==='ju'?'ju':'p8';
-/* 房主收到远端玩家的回合动作（出牌/胡/杠），在权威端执行 */
-globalThis.netRemoteAction=function(p,a){
-  if(!G||!G.h||G.h.over||G.h.turn!==p)return;
-  const P=G.h.P[p];
-  if(a.act==='discard'){if(G.h.turnActionTaken)return;const need=4-P.melds.length;if(P.hand.length!==3*need+2)return;const i=P.hand.indexOf(a.tile);if(i>=0)doDiscard(p,i);return}
-  if(a.act==='win'){if(canWinStruct(P.hand,G.h.wealth,4-P.melds.length))winSelf(p);return}
-  if(a.act==='angang'){if(counts(P.hand)[a.t]===4)doAnGang(p,a.t);return}
-  if(a.act==='jiagang'){const m=P.melds[a.mi];if(m&&m.type==='peng'&&m.tiles[0]===a.t&&P.hand.includes(a.t))jiaGangFlow(p,a.mi,a.t);return}
-};
 if(!NETON())newGame(MODE);
-else if(Net.isHost){
-  /* 房主：等待大厅点「开始游戏」后由 startNetworkGame 启动，并广播渲染/提示 */
-  window.startNetworkGame=function(mode){
-    for(let i=0;i<4;i++)NAMES[i]=Net.names[i]||NAMES[i];
-    /* 状态广播节流：renderAll 频繁调用，避免每帧都广播 */
-    let bcPending=false,bcTimer=null;
-    const throttledBC=()=>{
-      if(!Net.active||!Net.isHost)return;
-      if(bcPending)return;
-      bcPending=true;
-      bcTimer=setTimeout(()=>{bcPending=false;try{Net.broadcastState();}catch(e){console.warn('bcState',e);}},100);
-    };
-    const _ra=renderAll;renderAll=function(){_ra();throttledBC();};
-    const _sm=showModal;showModal=function(html,btns){_sm(html,btns);Net.broadcast({type:'modal',html,final:!!(btns&&btns.length&&btns[0].label==='再来一局')})};
-    const _note=note;note=function(x){_note(x);if(!/^(轮到你|请出牌|庄家开局|可以 |已选择|⚠ 财神)/.test(x))Net.broadcast({type:'notify',text:x})};
-    newGame(mode);
-    /* 立即广播一次让客户端能马上看到开局状态 */
-    setTimeout(()=>{try{Net.broadcastState();}catch(e){}},50);
-  };
-  $('#newRound').style.display='none';
-}else{
-  /* 客户端：游戏状态完全由房主广播。同步请求由 net.js 在连接 open 后管理（更可靠） */
-  $('#newRound').style.display='none';
-}
-if($('#newRound').style.display!=='none')$('#newRound').onclick=()=>{clearTimeout(aiTimer);startHand()};
+else $('#newRound').style.display='none';
+if($('#newRound').style.display!=='none')$('#newRound').onclick=()=>{document.getElementById('settingsDialog')?.close();clearTimeout(aiTimer);startHand()};
 $('#musicBtn').onclick=()=>{musicOn=!musicOn;if(musicOn){if(localSource==='upload'){if(localAudio)localAudio.play().catch(()=>{});else $('#uploadMusic').click()}else startPlaylistAudio()}else stopMusic()};
 document.addEventListener('pointerdown',()=>{if(musicOn&&!localAudio)startPlaylistAudio()},{once:true});
 /* 允许用户上传本地 MP3 作为背景乐 */

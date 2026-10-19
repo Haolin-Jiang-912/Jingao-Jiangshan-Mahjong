@@ -146,3 +146,5 @@ function scoreWin(ctx){
   const total=(base+extra)*mult+special;
   return {type,detail,total,payEach:total,special};
 }
+// Shared pure rules API for the authoritative room engine and its tests.
+globalThis.MahjongRules=Object.freeze({ORDER,SUITS,HONORS,FLOWERS,valOf,isFlower,suitOf,numOf,makeDeck,nextTile,counts,canWinStruct,waitTiles,chiOptions,scoreWin});

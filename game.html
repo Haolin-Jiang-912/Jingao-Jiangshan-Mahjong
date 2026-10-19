@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17305d"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><title>鸡歪麻将厅 · 牌局</title><link rel="stylesheet" href="style.css?v=20"></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17305d"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><title>鸡歪麻将厅 · 牌局</title><link rel="stylesheet" href="style.css?v=22"></head>
 <body class="game-page"><div class="scanlines"></div><div id="rotateTip"><div class="ph">📱</div><b>请横屏游玩</b><small>把手机转过来，牌桌更宽敞</small><button id="tipGo">仍要竖屏继续</button></div>
 
-<header class="pixel-header"><a href="index.html">← 大厅</a><b>鸡歪麻将厅</b><span id="handNo">第 1/8 盘</span><span id="netStatus" aria-live="polite"></span><div><button id="rulesBtn">规则</button><button id="musicBtn">音乐：开</button><button id="uploadMusic">上传MP3</button></div></header>
+<header class="pixel-header"><a href="index.html">← 大厅</a><b>鸡歪麻将厅</b><span id="handNo">第 1/8 盘</span><span id="netStatus" aria-live="polite"></span><div><button id="rulesBtn">规则</button><button id="settingsBtn" aria-haspopup="dialog">设置</button></div></header>
 <main class="classroom">
  <div class="blackboard">锦高优秀学子养成计划<br><small>认真学习 · 课间娱乐 · 只许自摸</small></div>
  <div class="teacher">
@@ -15,10 +15,10 @@
    <div class="student-desk-row row2"><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div></div>
  </div>
  <!-- 顶部信息条：翻牌/财神/牌墙/骰子，不压桌 -->
- <div class="table-meta">
-   <div class="game-info"><span id="wealthBox" class="wealth-box"></span><span id="wallCount">牌墙 144</span><span id="diceBox" class="dice-box">⚄⚄</span></div>
- </div>
  <section class="desk-table" aria-label="四张课桌拼成的麻将桌">
+  <div class="table-stage">
+   <div class="table-meta"><div class="game-info"><span id="wealthBox" class="wealth-box"></span><span id="wallCount">牌墙 144</span><button id="diceBox" class="dice-box" aria-haspopup="dialog" disabled>掷骰定庄</button></div></div>
+   <div class="play-surface">
    <div class="joined-desks" role="img" aria-label="四张浅米色、蓝色包边的学校课桌，紧靠拼成一张长方形牌桌"></div>
 <article class="opp o-right" id="opp-1"><div class="oscore" data-p="1">超超 <b>0</b></div><img class="avatar" src="avatar-chaochao.png"><div class="backs"></div><div class="omelds"></div><div class="oflowers"></div></article>
 <article class="opp o-top" id="opp-2"><div class="opp-main"><img class="avatar" src="avatar-hanhan.png"><div class="side"><div class="oscore" data-p="2">含含 <b>0</b></div><div class="oflowers"></div></div></div><div class="backs"></div><div class="omelds"></div></article>
@@ -30,10 +30,14 @@
      <div class="dz dz-b" id="discards-0"></div>
      <b id="turnLabel">正在洗牌</b>
    </div>
+   </div>
    <div id="actionBar" class="hint-bar" hidden></div>
+  </div>
    <div class="hand-area">
+    <div class="hand-status">
      <div class="my-score" id="myScore">林林 <b>0</b></div>
      <p id="statusText">正在洗牌…</p>
+    </div>
      <div class="hand-row">
        <div class="hand-col">
          <div id="myMelds" class="melds-row"></div>
@@ -48,9 +52,10 @@
  <div class="front-classroom">
    <div class="student-desk-row"><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head b"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div><div class="student"><div class="pixel-head g"></div><div class="school-desk-mini"></div><div class="school-chair-mini"></div></div></div>
  </div>
- <div class="actions"><button id="newRound">重新开局</button></div>
 </main>
 <div id="modal"><div class="mbox pixel-border"><div id="modalBody"></div><div id="modalBtns"></div></div></div>
 <dialog id="rulesDialog" class="rules-dialog"><h2>课间麻将小抄</h2><p>点一下手牌选中，再点「打出」确认。吃、碰、杠和胡牌会在轮到你时出现。</p><h3>江山规矩</h3><p>只能自摸；可以抢别人的补杠。财神可当任意牌，花牌自动补花。剩 20 张流局。</p><h3>怎么算分</h3><p>平胡 2 分；碰碰胡、七对、十三烂 6 分。单吊、财吊、杠开各 +2。每次飘财 ×2；清一色、天胡、地胡各 +10；花牌每朵 +1。</p><p>8 盘模式按总分排名；局麻每人 30 分，有人归零结束，特殊分最后计入。</p><button id="closeRules">知道了，继续玩</button></dialog>
-<script src="engine.js"></script><script src="ui.js"></script><script src="net.js"></script><script src="app.js"></script><script src="experience.js"></script>
+<dialog id="settingsDialog" class="rules-dialog settings-dialog" aria-labelledby="settingsTitle"><h2 id="settingsTitle">牌桌设置</h2><p>音乐只在你的设备播放。</p><div class="settings-options"><button id="musicBtn">音乐：开</button><button id="uploadMusic">上传自己的 MP3</button><button id="newRound">重新开局</button></div><button id="closeSettings">返回牌桌</button></dialog>
+<dialog id="diceDialog" class="rules-dialog dice-dialog" aria-labelledby="diceTitle"><button id="dismissDice" class="dialog-dismiss" aria-label="关闭骰子结果">×</button><h2 id="diceTitle" tabindex="-1" autofocus>这一盘，谁坐庄？</h2><div id="diceBody"></div><button id="closeDice">看懂了，继续玩</button></dialog>
+<script src="engine.js?v=22"></script><script src="ui.js?v=22"></script><script src="net.js?v=22"></script><script src="app.js?v=22"></script><script src="experience.js?v=22"></script>
 </body></html>

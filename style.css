@@ -288,105 +288,168 @@ button:active:not(:disabled),.start-btn:active{transform:translateY(2px)}
 #roomCode{text-transform:uppercase;letter-spacing:2px}.lobby-help{font-size:11px;color:#bbd4e7;margin:16px 0 0}.inline-error{font-size:12px;color:#ffb5a1;text-align:left;margin:8px 0 0;min-height:0}.inline-error:empty{display:none}
 .solo-description{font-size:14px;line-height:1.9;color:#d7e6f1;margin:26px 0}
 .lobby-rules{text-align:left;margin-top:24px;padding-top:18px;border-top:1px dashed #7185a1;font-size:12px;color:#c0d4e7;line-height:1.8}.lobby-rules summary{cursor:pointer;color:#ffdf91}.lobby-rules p{margin-bottom:0}.credit{font-size:8px;margin:24px 0 0;line-height:1.8}
-/* The table is one real asset depicting four separate desks. No felt overlay. */
-body.game-page .classroom{height:calc(100dvh - 56px)!important;min-height:0!important;overflow:hidden;background:#e9e1c9}
-body.game-page .pixel-header{display:flex!important;min-height:56px;height:56px;gap:12px;padding:0 max(12px,env(safe-area-inset-left));border-bottom-width:3px;z-index:28}
+/* The stage owns the seats; the bottom dock owns the player's controls. */
+body.game-page{height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column;background:#e9e1cf;--dock-ink:#203c55}
+body.game-page .pixel-header{flex:0 0 auto;display:flex!important;height:54px;min-height:54px;gap:14px;padding:0 max(16px,env(safe-area-inset-left));border-bottom:2px solid #f4c65a;z-index:28}
 body.game-page .pixel-header b{font-size:20px;white-space:nowrap}
-body.game-page .pixel-header>div{display:flex;gap:8px;margin-left:auto}
-body.game-page .pixel-header button{font-size:12px;padding:8px 10px;min-height:34px;box-shadow:2px 2px #091c35}
-body.game-page .desk-table{position:relative!important;left:auto!important;top:auto!important;width:min(1150px,98vw)!important;height:calc(100dvh - 112px)!important;margin:50px auto 0!important;min-height:0!important;transform:none!important;overflow:visible}
-.joined-desks{position:absolute;inset:45px 105px 82px;background:url('school-desks.png') center/100% 100% no-repeat;box-shadow:6px 10px 0 #23384b26;border-radius:8px;z-index:0}
-body.game-page .center-board{inset:24% 28% 37%;background:transparent;border:0;border-radius:0;box-shadow:none;overflow:visible}
-body.game-page .center-board b{bottom:45%;font-size:12px;opacity:.9;white-space:nowrap}
-body.game-page .dz{max-height:90px;gap:3px;overflow:auto;scrollbar-width:thin}
-body.game-page .dz-t{top:-25px;width:95%;max-height:65px}
-body.game-page .dz-b{bottom:-15px;width:95%;max-height:65px}
-body.game-page .dz-l{left:-70px;top:45%;width:42%;max-height:120px}
-body.game-page .dz-r{right:-70px;top:45%;width:42%;max-height:120px}
-body.game-page .o-top{top:-20px;max-width:65%}.o-top .backs{max-width:220px}
-body.game-page .o-left,body.game-page .o-right{top:37%;max-width:90px}
-body.game-page .opp .avatar{width:52px;height:64px;border-width:2px}
-body.game-page .blackboard,body.game-page .teacher,body.game-page .back-classroom,body.game-page .front-classroom,body.game-page .window{display:none!important}
-body.game-page .table-meta{display:flex!important;position:absolute;top:6px;left:50%;z-index:16;max-width:95vw}
-body.game-page .game-info{font-size:12px;padding:3px 12px;gap:10px;border-width:2px;box-shadow:none;white-space:nowrap}
-body.game-page .wealth-box .mtile{width:22px;height:30px}.dice-box{font-size:20px!important}
-body.game-page .hand-area{bottom:0;width:100%;padding:0 14px 8px;z-index:17}
-body.game-page .hand-area #statusText{position:static;transform:none;white-space:normal;margin:4px auto 8px;max-width:760px;font-size:12px;color:var(--ink);text-shadow:none;border:0;background:#f8f0dce8;padding:6px 10px;border-radius:3px;min-height:28px}
-body.game-page .hand-col{gap:4px;max-width:calc(100% - 68px)}
-body.game-page .hand{padding:14px 6px 5px;gap:4px;min-height:84px;overflow:visible}
-body.game-page .hand .tile{width:42px;height:62px;flex-basis:42px;touch-action:manipulation}
-body.game-page .melds-row{min-height:0;gap:4px}
-.hand-controls{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;flex-wrap:wrap;color:var(--ink)}
-body.game-page .hand-controls #tileHint{font-size:12px;line-height:1.4;flex-basis:100%;margin:0;min-height:18px;color:#263b50;text-shadow:none;position:static;transform:none;border:0;background:transparent;white-space:normal}
-.hand-controls button{font-size:13px;padding:10px 18px;border:2px solid #254c70;background:#e9f4fa;color:#193852;min-height:42px;font-weight:bold;box-shadow:2px 2px #647d8c}
-.hand-controls #discardBtn{background:#f4c65a;border-color:#725327;min-width:155px}
-body.game-page .my-score{top:0;left:12px;font-size:12px}
-body.game-page .hint-bar{top:auto;bottom:230px;min-width:220px;max-width:90%;z-index:24}
-body.game-page .hint-bar button{min-height:42px;font-size:14px;padding:8px 14px;animation:none}
-body.game-page .flower-rack{flex-basis:58px;min-height:64px;background:#234e71;border-width:1px}
+body.game-page .pixel-header a{white-space:nowrap}
+body.game-page #handNo{font-size:12px;white-space:nowrap}
+body.game-page #netStatus{position:static;max-width:190px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#c1e1f7;background:none}
+body.game-page .pixel-header>div{display:flex;gap:8px;margin-left:auto;flex-shrink:0}
+body.game-page .pixel-header button{font-size:12px;padding:8px 12px;min-height:38px;box-shadow:2px 2px #091c35}
+body.game-page .classroom{flex:1;min-height:0!important;height:auto!important;width:100%;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,#f6edda,#e6ddc7)}
+body.game-page .blackboard,body.game-page .teacher,body.game-page .back-classroom,body.game-page .front-classroom,body.game-page .window,body.game-page .classroom:before,body.game-page .classroom:after{display:none!important}
+body.game-page .desk-table{position:relative!important;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;isolation:isolate;left:auto!important;top:auto!important;width:100%!important;height:100%!important;min-height:0!important;min-width:0;margin:0!important;transform:none!important;overflow:hidden}
+.table-stage{position:relative;display:grid;place-items:center;min-height:0;container-type:size;padding:8px 0}
+.play-surface{position:relative;width:min(calc(100vw - 190px),calc((100dvh - 240px)*1.5));width:min(calc(100cqw - 190px),calc((100cqh - 22px)*1.5));aspect-ratio:3/2;isolation:isolate}
+body.game-page .joined-desks{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:3/2;transform:none;background:url('school-desks.png') center/100% 100% no-repeat;border-radius:8px;box-shadow:0 6px 0 #27394b20;z-index:0}
+body.game-page .opp{position:absolute;z-index:12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;max-width:100px}
+body.game-page .opp .avatar{width:44px;height:52px;border-width:2px;box-shadow:2px 2px #0b1d3d}
+body.game-page .oscore,body.game-page .my-score{font-size:11px;max-width:116px;overflow:hidden;text-overflow:ellipsis;padding:4px 7px;border-width:1px;border-radius:6px;box-shadow:1px 2px #0b1d3d}
+body.game-page .o-top{left:50%;top:6px;transform:translateX(-50%);max-width:70%;gap:3px}
+body.game-page .o-top .opp-main{display:flex;flex-direction:row;align-items:center;gap:6px}
+body.game-page .o-top .side{align-items:flex-start}
+body.game-page .o-top .avatar{width:28px;height:34px}
+body.game-page .o-top .backs{max-width:220px;flex-wrap:nowrap}
+body.game-page .o-top .omelds{min-height:0;max-width:none;width:max-content;flex-wrap:nowrap;margin-top:0}
+body.game-page .o-left{left:-88px;top:50%;transform:translateY(-50%)}
+body.game-page .o-right{right:-88px;top:50%;transform:translateY(-50%)}
+body.game-page .backs{gap:1px;max-width:66px;line-height:0}
+body.game-page .tile.back{width:8px;height:12px;flex:0 0 8px;border-radius:1px}
+body.game-page .omelds{gap:2px;max-width:88px}
+body.game-page .omelds .mtile{width:17px;height:24px}
+body.game-page .oflowers{font-size:10px;color:#4b554b;text-shadow:none}
+body.game-page .center-board{position:absolute;inset:82px 32px 14px;background:none;border:0;border-radius:0;box-shadow:none;overflow:visible;z-index:5}
+body.game-page .center-board b{top:50%;bottom:auto;left:50%;transform:translate(-50%,-50%);max-width:58%;overflow:hidden;text-overflow:ellipsis;font-size:11px;line-height:1.4;white-space:nowrap;padding:5px 8px;border-width:1px;border-radius:3px}
+body.game-page .dz{gap:2px;max-height:40%;overflow:auto;scrollbar-width:thin;align-content:flex-start;justify-content:center}
+body.game-page .dz-t{top:0;bottom:auto;left:50%;width:52%;transform:translateX(-50%)}
+body.game-page .dz-b{top:auto;bottom:0;left:50%;width:52%;transform:translateX(-50%)}
+body.game-page .dz-l{left:0;right:auto;top:50%;width:22%;max-height:85%;transform:translateY(-50%)}
+body.game-page .dz-r{right:0;left:auto;top:50%;width:22%;max-height:85%;transform:translateY(-50%)}
+body.game-page .table-meta{position:absolute;left:12px;right:auto;top:10px;transform:none;display:flex!important;z-index:16;max-width:176px}
+body.game-page .game-info{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:6px 9px;max-width:100%;font-size:11px;padding:5px 8px;border:1px solid #c5bba6;background:#f9f3e5ed;color:#29435a;border-radius:5px;box-shadow:none}
+body.game-page .wealth-box{gap:5px}
+body.game-page .wealth-box small{font-size:10px;color:#455b6c}
+body.game-page .wealth-box .mtile{width:19px;height:27px}
+body.game-page .dice-box{display:flex;align-items:center;gap:7px;min-height:38px;border:0;letter-spacing:0;padding:3px 0;background:none;color:#29435a;text-shadow:none;text-align:left;cursor:pointer;font-family:inherit}
+body.game-page .dice-box:disabled{opacity:1;cursor:default}
+.dice-pair{display:inline-flex;gap:4px;align-items:center;flex-shrink:0}
+.die-face{width:30px;height:30px;display:inline-grid;grid-template:repeat(3,1fr)/repeat(3,1fr);place-items:center;gap:2px;padding:4px;border:1px solid #a9977c;border-radius:5px;background:#fffefa;box-shadow:0 2px 0 #b8a78a;flex:0 0 auto;vertical-align:middle}
+.die-face .pip{width:5px;height:5px;background:#293f52;border-radius:50%;display:block}.die-one .pip{background:#c13b35;width:7px;height:7px}
+.pip.p1{grid-area:1/1}.pip.p3{grid-area:1/3}.pip.p4{grid-area:2/1}.pip.p5{grid-area:2/2}.pip.p6{grid-area:2/3}.pip.p7{grid-area:3/1}.pip.p9{grid-area:3/3}
+.dice-summary{display:flex;flex-direction:column;gap:2px;line-height:1.2;white-space:nowrap}.dice-summary small{font-size:9px;color:#546575}.dice-summary strong{font-size:11px;font-weight:700}
+.dice-dialog{width:min(500px,96vw);padding:22px}.dice-dialog h2{font-size:22px}.dice-dialog p{font-size:13px;margin:8px 0 16px}
+.dice-results{display:flex;flex-direction:column;gap:8px}.dice-result{display:grid;grid-template-columns:minmax(50px,1fr) 68px 92px 32px;align-items:center;gap:8px;padding:10px 8px;background:#244569;border:1px solid #507394;border-radius:5px;color:#f9f1df}.dice-result.is-dealer{border-color:#f4c65a;background:#3e5060}.dice-player{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dice-result strong{font-size:12px;white-space:nowrap}.dealer-badge{font-size:11px;color:#ffdc76;white-space:nowrap}.dice-explanation{color:#b9d3e8}
+.dice-dialog .dialog-dismiss{position:absolute;top:0;right:0;margin:0;width:44px;height:44px;padding:0;background:none;color:#f8e6ad;font-size:26px;line-height:1}
+body.game-page .hand-area{position:relative;left:auto;bottom:auto;transform:none;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 16px;width:100%;max-width:100%;min-width:0;padding:8px max(18px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));background:#f2ebdc;border-top:1px solid #c4baa3;color:var(--dock-ink);z-index:20;box-shadow:0 -4px 18px #18283c08}
+.hand-status{grid-column:1/-1;display:flex;align-items:center;gap:10px;min-height:25px;text-align:left;overflow:hidden}
+body.game-page .my-score{position:static;flex:0 0 auto;margin:0;max-width:140px}
+body.game-page .hand-area #statusText{position:static;transform:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;max-width:none;min-width:0;min-height:0;line-height:1.5;font-size:12px;color:#425664;text-shadow:none;background:none;border:0;padding:0;border-radius:0}
+body.game-page .hand-row{grid-column:1;min-width:0;align-items:flex-end;gap:10px;justify-content:center}
+body.game-page .hand-col{min-width:0;max-width:100%;gap:2px;flex:0 1 auto;align-items:center}
+body.game-page .melds-row{min-height:0;max-width:100%;gap:4px;flex-wrap:nowrap;justify-content:flex-start;align-self:flex-start;padding-top:2px;overflow:auto}
+body.game-page .hand{display:flex;flex-wrap:nowrap;justify-content:center;gap:4px;padding:13px 4px 4px;min-height:0;max-width:100%;width:auto;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:thin}
+body.game-page .hand .tile{width:42px;height:60px;flex:0 0 42px;touch-action:manipulation;border-width:2px;box-shadow:1px 3px #6a482d}
+body.game-page .hand .tile.selected{transform:translateY(-9px);box-shadow:1px 3px #643c24,0 0 0 3px #e8ac28;filter:brightness(1.04)}
+body.game-page .hand-controls{grid-column:2;grid-row:2;display:flex;flex-direction:column-reverse;align-items:stretch;justify-content:flex-start;gap:7px;margin:8px 0 0;min-width:144px;max-width:180px}
+body.game-page .hand-controls #tileHint{margin:0;color:#425664;text-shadow:none;font-size:11px;line-height:1.4;min-height:16px;position:static;transform:none;background:none;border:0;white-space:normal}
+.hand-controls button{font-size:13px;min-height:42px;padding:9px 14px;border:1px solid #52738b;border-radius:4px;background:#e3eef4;color:#193852;font-weight:bold;box-shadow:0 2px #97adba}
+.hand-controls #discardBtn{background:#f4c65a;border-color:#98732c;min-width:0;box-shadow:0 2px #aa8032}
+body.game-page .flower-rack{flex:0 0 auto;min-width:40px;max-width:72px;min-height:0;align-self:center;background:none;border:0;border-left:1px solid #c5bba7;padding:4px 0 4px 8px;color:#455b6c}
+body.game-page .flower-rack small{color:#455b6c;font-size:10px}
+body.game-page .flower-rack #flowerTiles{max-width:50px}
+body.game-page .hint-bar{position:absolute;top:auto;bottom:8px;left:50%;transform:translateX(-50%);min-width:0;max-width:96%;display:flex;flex-wrap:wrap;justify-content:center;gap:7px;z-index:24}
+body.game-page .hint-bar button{min-height:42px;font-size:13px;padding:8px 14px;border-width:2px;border-radius:4px;animation:none;box-shadow:0 2px #6b5534}
 body.game-page .actions{display:none!important}
-body.game-page #netStatus{position:static;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#c1e1f7;background:none}
-#modal{z-index:60}.mbox{max-height:88dvh;max-width:min(560px,94vw);padding:22px}
-.rules-dialog{width:min(480px,92vw);max-height:85dvh;padding:26px;background:#17305d;color:#ffefaa;border:3px solid #f4c65a;font-size:14px;line-height:1.8}
-.rules-dialog::backdrop{background:#091428bb}.rules-dialog h2{margin-top:0;font-size:23px}.rules-dialog h3{font-size:15px;color:#9fd0ff;margin-bottom:0}.rules-dialog button{background:#f4c65a;color:#562e22;border:0;padding:12px 18px;width:100%;font-weight:bold;margin-top:12px}
-#netDiag{white-space:pre-wrap;word-break:break-word}.scanlines{opacity:.035}
-@media(hover:hover) and (pointer:fine){.hand .tile:hover{transform:translateY(-5px)}.hand .tile.selected:hover{transform:translateY(-12px)}}
-@media(max-width:600px){
- .cover-wrap{padding:18px 12px}.cover-card{padding:22px 20px}.cover-card h1{font-size:42px}.tagline{font-size:16px}.mode-select span{font-size:13px}
- body.game-page .pixel-header{gap:8px;height:52px;min-height:52px;flex-wrap:nowrap;padding:0 10px}
- body.game-page .pixel-header b{font-size:16px}body.game-page .pixel-header a{font-size:12px}body.game-page .pixel-header button{font-size:11px;padding:7px 9px}
- #uploadMusic{display:none}body.game-page #netStatus{position:fixed;top:88px;left:8px;right:auto;max-width:200px;font-size:10px;color:#17305d;z-index:25;background:#f8f0dce8;padding:2px 5px}
- body.game-page #handNo{font-size:10px;white-space:nowrap}body.game-page .pixel-header>div{gap:5px}
- body.game-page .classroom{height:calc(100dvh - 52px)!important}
- body.game-page .desk-table{height:calc(100dvh - 95px)!important;margin:43px auto 0!important;width:100%!important}
- .joined-desks{inset:36px 20px 235px;border-radius:3px;box-shadow:3px 5px #23384b26}
- body.game-page .o-top{top:0;gap:1px;max-width:65%}.o-top .avatar{width:28px;height:34px}.o-top .opp-main{gap:4px}.o-top .omelds{min-height:0}
- body.game-page .o-left,body.game-page .o-right{top:27%;max-width:58px}.o-left{left:0}.o-right{right:0}
- body.game-page .opp .avatar{width:34px;height:42px}body.game-page .oscore{font-size:9px;padding:3px 5px;border-width:1px}
- body.game-page .backs{max-width:52px}.backs .tile.back{width:7px;height:10px;flex-basis:7px}
- body.game-page .center-board{inset:95px 76px 310px}
- body.game-page .center-board b{bottom:40%;font-size:10px;padding:3px 6px}
- body.game-page .dtile{width:18px;height:25px}.dtile .wan .num,.dtile .wan .suit{font-size:9px}
- body.game-page .dz-t{top:-15px;max-height:52px}.dz-b{bottom:-30px!important;max-height:52px!important}
- body.game-page .dz-l{left:-18px;max-height:75px;width:40%}.dz-r{right:-18px;max-height:75px;width:40%}
- body.game-page .hand-area{position:absolute;bottom:0;padding:8px 10px max(10px,env(safe-area-inset-bottom));background:#eee5d1f5;border-top:2px solid #6fb2cc}
- body.game-page .hand-area #statusText{font-size:11px;line-height:1.5;margin:12px 0 4px;min-height:28px;padding:4px 6px;background:transparent}
- body.game-page .hand-row{gap:5px}.hand-row .flower-rack{flex-basis:40px;min-height:45px;padding:2px}
- body.game-page .hand-col{max-width:calc(100% - 43px);flex:1}
- body.game-page .hand{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));width:min(330px,100%);gap:4px;padding:12px 3px 4px;min-height:0}
- body.game-page .hand .tile{width:100%;height:52px;min-width:0;border-width:2px;box-shadow:1px 2px #643c24}
- body.game-page .hand .tile .wan .num{font-size:20px}body.game-page .hand .tile .wan .suit{font-size:18px}
- body.game-page .hand .tile .feng,body.game-page .hand .tile .zhong,body.game-page .hand .tile .fa{font-size:24px}
- body.game-page .hand .tile .tong{grid-template-columns:repeat(3,6px);gap:2px}.hand .tile .tong i{width:6px;height:6px;border-width:1px}
- body.game-page .hand .tile .tiao{grid-template-columns:repeat(3,4px);gap:2px}.hand .tile .tiao i{width:4px;height:12px}
- body.game-page .hint-bar{bottom:274px;gap:5px}body.game-page .hint-bar button{font-size:12px;padding:7px 12px;min-height:40px}
- .hand-controls{gap:8px;margin-top:4px}.hand-controls button{padding:9px 14px;min-height:40px}.hand-controls #discardBtn{min-width:150px}
- body.game-page .hand-controls #tileHint{font-size:11px;min-height:16px}
- body.game-page .my-score{top:0;left:10px;padding:2px 7px;font-size:10px}
- body.game-page .table-meta{top:4px}.game-info small{font-size:10px!important}body.game-page .game-info{font-size:11px;gap:7px;padding:2px 7px}body.game-page .wealth-box .mtile{width:17px;height:24px}
- .mbox{padding:18px 14px}.seats{gap:6px}.seat{width:calc(25% - 6px);padding:8px 2px}.seat-avatar{width:32px;height:32px}.seat-name{font-size:11px}.seat-status{font-size:9px}
+#modal{z-index:60}.mbox{max-height:88dvh;max-width:min(560px,94vw);padding:22px;overscroll-behavior:contain}
+.rules-dialog{width:min(480px,92vw);max-height:85dvh;padding:26px;background:#17305d;color:#ffefaa;border:3px solid #f4c65a;font-size:14px;line-height:1.8;overscroll-behavior:contain}
+.rules-dialog::backdrop{background:#091428bb}.rules-dialog h2{margin-top:0;font-size:23px}.rules-dialog h3{font-size:15px;color:#9fd0ff;margin-bottom:0}.rules-dialog button{background:#f4c65a;color:#562e22;border:0;padding:12px 18px;min-height:44px;width:100%;font-weight:bold;margin-top:12px;border-radius:3px}
+.settings-options{display:flex;flex-direction:column;gap:8px;margin:18px 0}.settings-options button{background:#284d72;color:#f3edda;border:1px solid #6585a3;margin:0;text-align:left}
+#netDiag{white-space:pre-wrap;word-break:break-word}.scanlines{opacity:.025}
+@media(hover:hover) and (pointer:fine){body.game-page .hand .tile:hover{transform:translateY(-5px)}body.game-page .hand .tile.selected:hover{transform:translateY(-9px)}}
+/* Phones in landscape: one row of cards, confirmation beside the hand. */
+@media(orientation:landscape) and (max-height:600px){
+ body.game-page .pixel-header{height:44px;min-height:44px;gap:10px;padding:0 max(12px,env(safe-area-inset-left)) 0 max(12px,env(safe-area-inset-right))}
+ body.game-page .pixel-header b{font-size:16px}body.game-page .pixel-header a{font-size:12px}body.game-page .pixel-header button{font-size:12px;min-height:36px;padding:6px 12px;box-shadow:none}
+ body.game-page #netStatus{max-width:140px;font-size:10px}body.game-page #handNo{font-size:11px}
+ .play-surface{width:min(calc(100cqw - 170px),calc((100cqh - 12px)*1.5))}
+ body.game-page .opp .avatar{width:30px;height:36px}body.game-page .o-top .avatar{width:24px;height:28px}
+ body.game-page .o-top{top:4px;gap:2px}body.game-page .o-top .backs{max-width:190px}
+ body.game-page .oscore{font-size:10px;padding:3px 6px;max-width:96px}body.game-page .o-left{left:-76px}body.game-page .o-right{right:-76px}
+ body.game-page .backs{max-width:58px}body.game-page .tile.back{width:7px;height:10px;flex-basis:7px}
+ body.game-page .center-board{inset:76px 20px 10px}body.game-page .center-board b{font-size:10px;padding:3px 6px}
+ body.game-page .dtile{width:17px;height:24px}body.game-page .dtile .wan .num,body.game-page .dtile .wan .suit{font-size:10px}body.game-page .dtile .feng,body.game-page .dtile .zhong,body.game-page .dtile .fa{font-size:14px}
+ body.game-page .table-meta{top:8px;left:max(10px,env(safe-area-inset-left));max-width:144px}body.game-page .game-info{gap:4px 7px;padding:4px 6px;font-size:10px}
+ body.game-page .wealth-box .mtile{width:17px;height:24px}
+ body.game-page .hand-area{padding:5px max(14px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));gap:0 12px}
+ .hand-status{min-height:22px;gap:8px}body.game-page .my-score{font-size:10px;padding:3px 6px}body.game-page .hand-area #statusText{font-size:11px}
+ body.game-page .hand-row{gap:6px}body.game-page .hand{gap:3px;padding:11px 3px 3px}
+ body.game-page .hand .tile{width:clamp(27px,4.1vw,42px);height:clamp(44px,6.3vw,58px);flex-basis:clamp(27px,4.1vw,42px)}
+ body.game-page .hand .tile .wan .num{font-size:20px}body.game-page .hand .tile .wan .suit{font-size:17px}
+ body.game-page .hand .tile .feng,body.game-page .hand .tile .zhong,body.game-page .hand .tile .fa{font-size:24px;line-height:1}
+ body.game-page .hand .tile .tong{grid-template-columns:repeat(3,7px);gap:2px}body.game-page .hand .tile .tong i{width:7px;height:7px;border-width:1px}
+ body.game-page .hand .tile .tiao{grid-template-columns:repeat(3,4px);gap:2px}body.game-page .hand .tile .tiao i{width:4px;height:13px}
+ body.game-page .hand-controls{min-width:160px;max-width:190px;gap:6px;margin:0;display:flex;flex-direction:row;align-items:flex-end;justify-content:flex-end}
+ body.game-page .hand-controls #hintBtn{width:62px;padding:6px 5px}body.game-page .hand-controls #discardBtn{flex:1;min-width:92px}
+ body.game-page .hand-controls button{min-height:44px;padding:7px 10px;font-size:12px}body.game-page .hand-controls #tileHint{position:absolute;width:1px;height:1px;min-height:0;overflow:hidden;clip-path:inset(50%)}
+ body.game-page .flower-rack{min-width:28px;padding-left:6px}body.game-page #flowerTiles,body.game-page .flower-rack>small:first-child{display:none}
+ body.game-page .melds-row .mtile{width:16px;height:23px}body.game-page .meld{padding:1px}
+ body.game-page .hint-bar{bottom:5px;gap:5px}body.game-page .hint-bar button{min-height:38px;padding:7px 10px;font-size:12px}
+ .dice-dialog{padding:16px 22px}.dice-dialog h2{line-height:1.2;margin:0 0 8px;font-size:21px}.dice-dialog p{font-size:12px;line-height:1.5;margin:6px 0 10px}.dice-results{gap:6px}.dice-result{padding:5px 8px}.dice-dialog #closeDice{min-height:38px;padding:8px 12px;margin-top:6px}
 }
-@media(max-height:520px) and (min-width:601px){
- body.game-page .pixel-header{height:42px;min-height:42px}body.game-page .classroom{height:calc(100dvh - 42px)!important}
- body.game-page .desk-table{height:calc(100dvh - 75px)!important;margin:33px auto 0!important}.joined-desks{inset:25px 80px 60px}
- body.game-page .table-meta{top:2px}.game-info{max-height:30px}.wealth-box .mtile{height:23px!important}
- body.game-page .o-top{top:-12px}.o-top .avatar{width:25px!important;height:30px!important}.o-top .omelds{min-height:0}
- body.game-page .hand-area #statusText{margin:0;font-size:10px;padding:2px}.hand-controls{margin-top:2px}.hand-controls #tileHint{flex-basis:auto!important;max-width:280px;font-size:10px!important}.hand-controls button{padding:5px 12px;min-height:32px;font-size:11px}
- body.game-page .hand{min-height:0;padding:10px 4px 3px;gap:3px}.hand .tile{height:49px!important;width:34px!important;flex-basis:34px!important}.hand .tile .wan .num{font-size:18px!important}.hand .tile .wan .suit{font-size:16px!important}
- body.game-page .hint-bar{bottom:145px}.hint-bar button{min-height:32px!important;font-size:12px!important;padding:5px 12px!important}
- body.game-page .center-board{inset:22% 30% 40%}.opp .avatar{width:36px!important;height:44px!important}
+/* Portrait keeps a single continuous hand; swipe to inspect the full row. */
+@media(orientation:portrait) and (max-width:700px){
+ .cover-wrap{padding:18px 12px}.cover-card{padding:22px 20px}.cover-card h1{font-size:42px}.tagline{font-size:16px}.mode-select span{font-size:13px}
+ body.game-page .pixel-header{height:48px;min-height:48px;gap:7px;padding:0 9px}
+ body.game-page .pixel-header b{font-size:16px}body.game-page .pixel-header a{font-size:11px}body.game-page .pixel-header button{font-size:11px;padding:6px 8px;min-height:34px;box-shadow:none}
+ body.game-page #handNo{font-size:10px}body.game-page #netStatus{display:none}body.game-page .pixel-header>div{gap:5px}
+ .table-stage{padding:48px 0 12px}
+ .play-surface{width:calc(100vw - 24px);width:min(calc(100cqw - 24px),calc((100cqh - 96px)*1.5));max-width:470px}
+ body.game-page .table-meta{top:6px;left:50%;transform:translateX(-50%);max-width:96%;width:max-content}body.game-page .game-info{flex-wrap:nowrap;gap:7px;white-space:nowrap;padding:3px 7px}
+ body.game-page .opp .avatar{width:27px;height:33px}body.game-page .o-top .avatar{width:23px;height:28px}
+ body.game-page .o-left{left:-8px;max-width:60px}body.game-page .o-right{right:-8px;max-width:60px}
+ body.game-page .oscore{font-size:9px;padding:3px 4px;max-width:64px}.o-top .opp-main{gap:3px}
+ body.game-page .backs{max-width:43px}body.game-page .tile.back{width:5px;height:8px;flex-basis:5px}body.game-page .o-top .backs{max-width:150px}
+ body.game-page .omelds{max-width:56px}body.game-page .omelds .mtile{width:12px;height:18px}
+ body.game-page .center-board{inset:76px 44px 10px}body.game-page .center-board b{font-size:9px;padding:4px}
+ body.game-page .dtile{width:16px;height:23px}body.game-page .dtile .wan .num,body.game-page .dtile .wan .suit{font-size:9px}body.game-page .dtile .feng,body.game-page .dtile .zhong,body.game-page .dtile .fa{font-size:14px}
+ body.game-page .hand-area{display:flex;flex-direction:column;gap:0;padding:7px 10px max(10px,env(safe-area-inset-bottom))}
+ .hand-status{width:100%;gap:7px;min-height:25px}body.game-page .my-score{font-size:10px;max-width:100px}body.game-page .hand-area #statusText{font-size:10px}
+ body.game-page .hand-row{gap:5px;width:100%}body.game-page .hand-col{flex:1;max-width:calc(100% - 30px)}
+ body.game-page .hand{display:flex;flex-wrap:nowrap;justify-content:flex-start;width:100%;gap:4px;padding:12px 3px 6px;scroll-padding-inline:4px}
+ body.game-page .hand .tile{width:40px;flex:0 0 40px;height:58px;min-width:40px;box-shadow:1px 2px #643c24}
+ body.game-page .hand .tile .wan .num{font-size:20px}body.game-page .hand .tile .wan .suit{font-size:18px}
+ body.game-page .hand .tile .feng,body.game-page .hand .tile .zhong,body.game-page .hand .tile .fa{font-size:24px;line-height:1}
+ body.game-page .hand .tile .tong{grid-template-columns:repeat(3,6px);gap:2px}body.game-page .hand .tile .tong i{width:6px;height:6px;border-width:1px}
+ body.game-page .hand .tile .tiao{grid-template-columns:repeat(3,4px);gap:2px}body.game-page .hand .tile .tiao i{width:4px;height:12px}
+ body.game-page .flower-rack{min-width:25px;max-width:25px;padding:3px 0 3px 5px}body.game-page #flowerTiles,body.game-page .flower-rack>small:first-child{display:none}
+ body.game-page .melds-row .mtile{width:17px;height:24px}
+ body.game-page .hand-controls{width:100%;max-width:none;min-width:0;display:grid;grid-template-columns:1fr 1.3fr;gap:8px;margin:5px 0 0}
+ body.game-page .hand-controls #tileHint{grid-column:1/-1;grid-row:1;font-size:11px;min-height:16px;text-align:center}
+ body.game-page .hand-controls #hintBtn{grid-column:1;grid-row:2}body.game-page .hand-controls #discardBtn{grid-column:2;grid-row:2}body.game-page .hand-controls button{min-height:44px;padding:9px 12px}
+ body.game-page .hint-bar{bottom:6px;gap:5px}body.game-page .hint-bar button{font-size:12px;padding:7px 10px;min-height:40px}
+ .dice-box .die-face{width:24px;height:24px;padding:3px;gap:1px}.dice-box .pip{width:4px;height:4px}.dice-box .die-one .pip{width:5px;height:5px}.dice-box .dice-pair{gap:3px}.dice-summary strong{font-size:10px}.dice-summary small{font-size:8px}body.game-page .dice-box{gap:5px;min-height:32px}
+ .dice-dialog{padding:18px 12px}.dice-result{grid-template-columns:minmax(40px,1fr) 64px 85px 26px;gap:5px;padding:10px 5px}.dice-result strong{font-size:11px}
+ .mbox{padding:18px 14px}.seats{gap:6px}.seat{width:calc(25% - 6px);padding:8px 2px}.seat-name{font-size:11px}.seat-status{font-size:9px}
+}
+@media(orientation:landscape) and (max-width:740px){
+ body.game-page .hand .tile .tong{grid-template-columns:repeat(3,5px);gap:2px}body.game-page .hand .tile .tong i{width:5px;height:5px}
+ body.game-page .hand .tile .bai{width:18px;height:28px;border-width:2px}body.game-page .hand .tile .bai i{width:10px;height:18px;border-width:1px}
+ body.game-page .hand .tile .wan .num{font-size:18px}body.game-page .hand .tile .wan .suit{font-size:15px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
-
-.hand .tile.selected{transform:translateY(-10px);box-shadow:1px 3px #643c24,0 0 0 3px #ffd94d;filter:brightness(1.04)}
-body.game-page .table-meta{right:auto;transform:translateX(-50%)}
-/* Keep the reference desk proportions at every viewport. */
-body.game-page .joined-desks{inset:auto;left:50%;top:45px;transform:translateX(-50%);width:min(calc(100% - 210px),calc((100dvh - 240px)*1.5));height:auto;aspect-ratio:3/2}
-@media(max-width:600px){
- body.game-page .joined-desks{top:clamp(40px,calc((100dvh - 620px)/2),120px);width:calc(100% - 40px);height:auto;aspect-ratio:3/2}
- body.game-page .o-top{top:clamp(0px,calc((100dvh - 700px)/2),60px)}
- body.game-page .o-left,body.game-page .o-right{top:30%}
- body.game-page .center-board{top:clamp(70px,calc((100dvh - 550px)/2),150px);bottom:auto;height:160px;left:76px;right:76px}
-}
-@media(max-height:520px) and (min-width:601px){body.game-page .joined-desks{top:25px;width:min(calc(100% - 160px),calc((100dvh - 150px)*1.5))}}
-body.game-page .classroom:before,body.game-page .classroom:after{display:none}
+/* Small card faces scale with their frame, so bamboo and dots stay inside it. */
+body.game-page :is(.mtile,.dtile){overflow:hidden}
+body.game-page :is(.mtile,.dtile) .wan .num{font-size:calc(12px * var(--face-scale,1))}
+body.game-page :is(.mtile,.dtile) .wan .suit{font-size:calc(11px * var(--face-scale,1))}
+body.game-page :is(.mtile,.dtile) .tiao:not(.bird){display:grid;grid-template-columns:repeat(3,calc(3px * var(--face-scale,1)));gap:calc(1px * var(--face-scale,1));place-content:center}
+body.game-page :is(.mtile,.dtile) .tiao i{height:calc(7px * var(--face-scale,1));width:calc(3px * var(--face-scale,1));box-shadow:0 calc(2px * var(--face-scale,1)) #e1c341}
+body.game-page :is(.mtile,.dtile) .tong{display:grid;grid-template-columns:repeat(3,calc(4px * var(--face-scale,1)));gap:calc(1px * var(--face-scale,1));place-content:center}
+body.game-page :is(.mtile,.dtile) .tong i{width:calc(4px * var(--face-scale,1));height:calc(4px * var(--face-scale,1));border-width:1px;box-shadow:none}
+body.game-page :is(.mtile,.dtile) :is(.feng,.zhong,.fa){font-size:calc(18px * var(--face-scale,1));line-height:1}
+body.game-page :is(.mtile,.dtile) .bai{width:calc(14px * var(--face-scale,1));height:calc(22px * var(--face-scale,1));border-width:1px}
+body.game-page :is(.mtile,.dtile) .bai i{width:calc(9px * var(--face-scale,1));height:calc(15px * var(--face-scale,1));border-width:1px}
+body.game-page .wealth-box .mtile{width:24px;height:34px;--face-scale:1.05}
+body.game-page .omelds .mtile{--face-scale:.72}
+@media(orientation:landscape) and (max-height:600px){body.game-page .dtile{--face-scale:.72}body.game-page .melds-row .mtile{width:22px;height:31px;--face-scale:1}}
+@media(orientation:portrait) and (max-width:700px){body.game-page .dtile{--face-scale:.68}body.game-page .omelds .mtile{--face-scale:.5}body.game-page .melds-row .mtile{width:22px;height:31px;--face-scale:1}}
