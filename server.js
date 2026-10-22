@@ -1,15 +1,15 @@
 /* Local Node server uses the same authoritative controller as Cloudflare. */
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),WebSocket=require('ws');
 const PORT=process.env.PORT||3001,ROOT=__dirname;
-const allowed=new Set(['index.html','game.html','style.css','lobby.js','experience.js','engine.js','ui.js','net.js','app.js','campus-cover.png','school-desks.png','sprite-jiejie.png','avatar-chaochao.png','avatar-hanhan.png','avatar-linlin.png','avatar-zhengzheng.png','bgm-1.mp3','bgm-2.mp3','bgm-3.mp3']);
-const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.mp3':'audio/mpeg'};
+const allowed=new Set(['index.html','game.html','style.css','scene.css','pixel-cloud.png','campus-cover-v24.webp','school-desks-v24.webp','pixel-cloud-v24.webp','lobby.js','experience.js','engine.js','ui.js','net.js','app.js','campus-cover.png','school-desks.png','sprite-jiejie.png','avatar-chaochao.png','avatar-hanhan.png','avatar-linlin.png','avatar-zhengzheng.png','bgm-1.mp3','bgm-2.mp3','bgm-3.mp3']);
+const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.webp':'image/webp','.mp3':'audio/mpeg'};
 (async()=>{
   const {RoomController}=await import('./room-controller.mjs'),rooms=new Map();
   const server=http.createServer((req,res)=>{
     let p;try{p=decodeURIComponent(new URL(req.url,'http://local').pathname);}catch{res.writeHead(400);res.end();return;}
     if(p==='/health'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify({ok:true,protocol:2,authority:'server'}));return;}
     const file=p==='/'?'index.html':p.slice(1);if(!allowed.has(file)){res.writeHead(404);res.end('Not found');return;}
-    fs.readFile(path.join(ROOT,file),(err,data)=>{if(err){res.writeHead(404);res.end();return;}res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream','Cache-Control':'no-store'});res.end(req.method==='HEAD'?undefined:data);});
+    fs.readFile(path.join(ROOT,file),(err,data)=>{if(err){res.writeHead(404);res.end();return;}res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream','Cache-Control':/-v\d+\.webp$/.test(file)?'public, max-age=31536000, immutable':'no-store'});res.end(req.method==='HEAD'?undefined:data);});
   });
   const wss=new WebSocket.Server({server,maxPayload:32768});
   wss.on('connection',(ws,req)=>{

@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17305d"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><title>鸡歪麻将厅 · 牌局</title><link rel="stylesheet" href="style.css?v=22"></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17305d"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><title>鸡歪麻将厅 · 牌局</title><link rel="preload" as="image" href="school-desks-v24.webp" fetchpriority="high"><style>:root{--campus-preview:url(data:image/webp;base64,UklGRq4BAABXRUJQVlA4IKIBAAAQCwCdASpAACsAPvVipU6qpSMiNVgMAVAeiWwAx2QKDi+7Mr/PB40vReAvXki9g8GQDYZD/dKU7i2lxS5+eTDzGNzE3ZZ5GRJXiltCiLKyhf7K3anZN3gz9m0Julm/YlMgAP641B8TTv/xvGiGlbR//DjDlhdwOMzQEs4/Oy/yGhA6a/acKHFBaly6pgxguyJhImsFjFU/1bbqOCuljvdNWNo4s5tEg6q9ILkoT3mo6u8yuCn45hDy/LgZuAaIRKVnb9p19KM7p1oZ80XspIM42O998e2Ai4qpZzzCRwm6yGO/OY7NoL9cFI/6rT/oVDU+B904wtF4DuI9S5TeufNkfxvqRAg+Soqc4xCTnbLRytEjThQlA6YOfwlYhe1jl8uUWlRL5ofwkofWkgV74bbpUDyf+byM8xJ94WDUVopM60oU69yBAGmE2D3KaEUuhzx1JmazYuCOy0imdyMOFO+idZE9ZIR55c1zXecXHE2q4PXXAtD6rEWNJqUKVLQoafnLbIhdYQEJelzJ2ypx9U4pPL0dFvzXvv9wyFEwDOIAAAAA);--desk-preview:url(data:image/webp;base64,UklGRg4CAABXRUJQVlA4IAICAABQDwCdASpgAEAAPv1srE6rJiQiLVZuQWAfiWwAwcnsWP9v+3WPHCdesNv+t3bgfw/0AfwD/eernpnHoAdHDky6aPqck8kzs4K4oRQXTDhGJ2CDW1FLMsS2YIy18fge0GVLuIe5dmCklewnjixYCXDp4jaz8Y0LVjMR14EoH4kMwcavgAD+9AUC+KNWWw6ZLQKtLd6tg6Yq2yX4G8PJ0kyXWEtbOIPQiGQeLM9+ZxF5EKjJ9VWA/W1nfiyJcAip5pdAeZfsTJCl9qz6S+H+7VnCfk8voA+6t/ZA6femapoNF7sHP+EV0BJj63lBCCj90Qt8Z4ySyevXp4KX+p8t6TGOlAflU3xxqrEB8u7llXCoENRODOv3WRnahmm+ILyywjPtVevuFhin5dOwLf50jfpJLAvRS+J9C4w08bq20DIO+2Fzcp4M1sWtguAoVhveLNAsdtplZv5eWjm5VGyNJXdDjvRnBxV2vWx9zZrml1aPeIgaVLXMdMCTOC+xiAh4V2SiE5EfXCP/6q4Cojp9yusu02gkmOrp1R/CZCP4ULlWVf5h7B6YBBva1I1bBcSAQ6VQcgV8UUT7TeK7z1jt6I2czGfannVZhD9A5MkxflV2CtrD7t0Esf5vKmtbiVDI1LXhCJ6UTA86qKKR9BCGBXLxkwLLf+GhzHG8GIA4oSLdgAAA)}</style><link rel="stylesheet" href="style.css?v=24"><link rel="stylesheet" href="scene.css?v=24"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=ZCOOL+KuaiLe&display=swap" media="print" onload="this.media='all'"><link rel="preload" as="image" href="campus-cover-v24.webp" fetchpriority="low"></head>
 <body class="game-page"><div class="scanlines"></div><div id="rotateTip"><div class="ph">📱</div><b>请横屏游玩</b><small>把手机转过来，牌桌更宽敞</small><button id="tipGo">仍要竖屏继续</button></div>
 
-<header class="pixel-header"><a href="index.html">← 大厅</a><b>鸡歪麻将厅</b><span id="handNo">第 1/8 盘</span><span id="netStatus" aria-live="polite"></span><div><button id="rulesBtn">规则</button><button id="settingsBtn" aria-haspopup="dialog">设置</button></div></header>
+<header class="pixel-header"><a href="index.html">← 大厅</a><b>鸡歪麻将厅</b><span id="handNo">第 1/8 盘</span><span class="round-summary"><b id="turnLabel">正在洗牌</b></span><span id="netStatus" aria-live="polite"></span><div><button id="rulesBtn">规则</button><button id="settingsBtn" aria-haspopup="dialog">设置</button></div></header>
 <main class="classroom">
  <div class="blackboard">锦高优秀学子养成计划<br><small>认真学习 · 课间娱乐 · 只许自摸</small></div>
  <div class="teacher">
@@ -17,18 +17,18 @@
  <!-- 顶部信息条：翻牌/财神/牌墙/骰子，不压桌 -->
  <section class="desk-table" aria-label="四张课桌拼成的麻将桌">
   <div class="table-stage">
-   <div class="table-meta"><div class="game-info"><span id="wealthBox" class="wealth-box"></span><span id="wallCount">牌墙 144</span><button id="diceBox" class="dice-box" aria-haspopup="dialog" disabled>掷骰定庄</button></div></div>
+   <div class="table-meta"><div class="game-info"><span id="wealthBox" class="wealth-box"></span><button id="diceBox" class="dice-box" aria-haspopup="dialog" disabled>掷骰定庄</button></div></div>
    <div class="play-surface">
    <div class="joined-desks" role="img" aria-label="四张浅米色、蓝色包边的学校课桌，紧靠拼成一张长方形牌桌"></div>
 <article class="opp o-right" id="opp-1"><div class="oscore" data-p="1">超超 <b>0</b></div><img class="avatar" src="avatar-chaochao.png"><div class="backs"></div><div class="omelds"></div><div class="oflowers"></div></article>
 <article class="opp o-top" id="opp-2"><div class="opp-main"><img class="avatar" src="avatar-hanhan.png"><div class="side"><div class="oscore" data-p="2">含含 <b>0</b></div><div class="oflowers"></div></div></div><div class="backs"></div><div class="omelds"></div></article>
 <article class="opp o-left" id="opp-3"><div class="oscore" data-p="3">政政 <b>0</b></div><img class="avatar" src="avatar-zhengzheng.png"><div class="backs"></div><div class="omelds"></div><div class="oflowers"></div></article>
    <div class="center-board">
-     <div class="dz dz-t" id="discards-2"></div>
-     <div class="dz dz-r" id="discards-1"></div>
-     <div class="dz dz-l" id="discards-3"></div>
-     <div class="dz dz-b" id="discards-0"></div>
-     <b id="turnLabel">正在洗牌</b>
+     <div class="table-hub" aria-label="方位与余牌"><span class="hub-wind hub-top" data-seat="2"></span><span class="hub-wind hub-right" data-seat="1"></span><span class="hub-wind hub-bottom" data-seat="0"></span><span class="hub-wind hub-left" data-seat="3"></span><span class="hub-count"><strong id="wallCount">144</strong><small>余牌</small></span></div>
+     <button class="dz dz-t" id="discards-2" aria-label="查看对家弃牌" aria-haspopup="dialog"></button>
+     <button class="dz dz-r" id="discards-1" aria-label="查看下家弃牌" aria-haspopup="dialog"></button>
+     <button class="dz dz-l" id="discards-3" aria-label="查看上家弃牌" aria-haspopup="dialog"></button>
+     <button class="dz dz-b" id="discards-0" aria-label="查看自己的弃牌" aria-haspopup="dialog"></button>
    </div>
    </div>
    <div id="actionBar" class="hint-bar" hidden></div>
@@ -37,6 +37,7 @@
     <div class="hand-status">
      <div class="my-score" id="myScore">林林 <b>0</b></div>
      <p id="statusText">正在洗牌…</p>
+     <button id="hintBtn">听牌提示</button>
     </div>
      <div class="hand-row">
        <div class="hand-col">
@@ -45,7 +46,7 @@
        </div>
        <aside class="flower-rack"><small>补花</small><div id="flowerTiles"></div><small id="flowers">花 0</small></aside>
      </div>
-     <div class="hand-controls"><p id="tileHint" role="status">点选一张手牌，再点「打出」</p><button id="hintBtn">听牌提示</button><button id="discardBtn" disabled>选择一张牌</button></div>
+     <div class="hand-controls"><p id="tileHint" role="status">点选一张手牌，再点「打出」</p><button id="discardBtn" disabled>选择一张牌</button></div>
    </div>
  </section>
  <!-- 前排课桌：牌桌下方 -->
@@ -57,5 +58,6 @@
 <dialog id="rulesDialog" class="rules-dialog"><h2>课间麻将小抄</h2><p>点一下手牌选中，再点「打出」确认。吃、碰、杠和胡牌会在轮到你时出现。</p><h3>江山规矩</h3><p>只能自摸；可以抢别人的补杠。财神可当任意牌，花牌自动补花。剩 20 张流局。</p><h3>怎么算分</h3><p>平胡 2 分；碰碰胡、七对、十三烂 6 分。单吊、财吊、杠开各 +2。每次飘财 ×2；清一色、天胡、地胡各 +10；花牌每朵 +1。</p><p>8 盘模式按总分排名；局麻每人 30 分，有人归零结束，特殊分最后计入。</p><button id="closeRules">知道了，继续玩</button></dialog>
 <dialog id="settingsDialog" class="rules-dialog settings-dialog" aria-labelledby="settingsTitle"><h2 id="settingsTitle">牌桌设置</h2><p>音乐只在你的设备播放。</p><div class="settings-options"><button id="musicBtn">音乐：开</button><button id="uploadMusic">上传自己的 MP3</button><button id="newRound">重新开局</button></div><button id="closeSettings">返回牌桌</button></dialog>
 <dialog id="diceDialog" class="rules-dialog dice-dialog" aria-labelledby="diceTitle"><button id="dismissDice" class="dialog-dismiss" aria-label="关闭骰子结果">×</button><h2 id="diceTitle" tabindex="-1" autofocus>这一盘，谁坐庄？</h2><div id="diceBody"></div><button id="closeDice">看懂了，继续玩</button></dialog>
-<script src="engine.js?v=22"></script><script src="ui.js?v=22"></script><script src="net.js?v=22"></script><script src="app.js?v=22"></script><script src="experience.js?v=22"></script>
+<dialog id="discardsDialog" class="rules-dialog discards-dialog" aria-labelledby="discardsTitle"><button id="dismissDiscards" class="dialog-dismiss" aria-label="关闭弃牌记录">×</button><h2 id="discardsTitle" tabindex="-1" autofocus>弃牌</h2><div id="discardsBody"></div><button id="closeDiscards">返回牌桌</button></dialog>
+<script src="engine.js?v=24"></script><script src="ui.js?v=24"></script><script src="net.js?v=24"></script><script src="app.js?v=24"></script><script src="experience.js?v=24"></script>
 </body></html>

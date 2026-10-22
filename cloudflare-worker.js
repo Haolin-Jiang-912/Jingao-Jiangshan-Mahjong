@@ -29,6 +29,12 @@ export default {
       return env.MAHJONG_ROOMS.get(env.MAHJONG_ROOMS.idFromName('v2:'+room)).fetch(new Request(u,request));
     }
     if(u.pathname==='/')u.pathname='/index.html';
-    return env.ASSETS.fetch(new Request(u,request));
+    const response=await env.ASSETS.fetch(new Request(u,request));
+    if(response.ok&&/-v\d+\.webp$/.test(u.pathname)){
+      const headers=new Headers(response.headers);
+      headers.set('Cache-Control','public, max-age=31536000, immutable');
+      return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+    }
+    return response;
   }
 };

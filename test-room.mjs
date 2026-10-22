@@ -41,11 +41,17 @@ console.log('ROOM_ENGINE_OK '+JSON.stringify({hands,turns,claims,checks:'144 til
     const g=fixture({0:['3万'],1:hand1});applyAction(g,0,{act:'discard',tile:'3万'});
     assert.equal(g.phase.kind,'claim');applyAction(g,1,{act:'claim',choice:{act:kind,...(opt?{opt}:{})}});assertGame(g);return g;
   }
-  let q=discardClaim('吃',['1万','2万'],['1万','2万']);assert.equal(q.h.P[1].melds[0].type,'chi');assert.equal(q.phase.actor,1);
+  let q=discardClaim('吃',['1万','2万'],['1万','2万']);assert.equal(q.h.P[1].melds[0].type,'chi');assert.equal(q.phase.actor,1);assert.equal(q.h.lastDiscard,null,'claimed tile must no longer be highlighted in the river');
   q=discardClaim('碰',['3万','3万']);assert.equal(q.h.P[1].melds[0].type,'peng');
   q=discardClaim('杠',['3万','3万','3万']);assert.equal(q.h.P[1].melds[0].tiles.length,4);assert.equal(q.h.kongDraw,true);
   q=fixture({0:['3万','3万','3万','3万']});applyAction(q,0,{act:'angang',t:'3万'});assertGame(q);assert.equal(q.h.P[0].melds[0].tiles.length,4);
+  for(const restored of [q,JSON.parse(JSON.stringify(q))]){
+    assert.deepEqual(seatState(restored,0).h.P[0].melds[0].tiles,Array(4).fill('3万'),'owner retains own concealed kong');
+    for(const viewer of [1,2,3])assert.deepEqual(seatState(restored,viewer).h.P[0].melds[0].tiles,Array(4).fill(null),'other seats receive only concealed kong count, including after storage restoration');
+    assert.deepEqual(restored.h.P[0].melds[0].tiles,Array(4).fill('3万'),'redaction must not mutate authoritative tiles');
+  }
   q=fixture({0:['3万']},{0:[{type:'peng',tiles:['3万','3万','3万'],from:2}]});applyAction(q,0,{act:'jiagang',t:'3万',mi:0});assertGame(q);assert.equal(q.h.P[0].melds[0].tiles.length,4);
+  assert.deepEqual(seatState(q,1).h.P[0].melds[0].tiles,Array(4).fill('3万'),'an exposed/added kong remains public');
   q=fixture({0:['东'],1:['1万','2万','3万','4万','5万','6万','1条','2条','3条','7筒','8筒','9筒','白']},{0:[{type:'peng',tiles:['东','东','东'],from:2}]});
   applyAction(q,0,{act:'jiagang',t:'东',mi:0});assert.equal(q.phase.kind,'rob');const persisted=JSON.parse(JSON.stringify(q));
   applyAction(persisted,1,{act:'claim',choice:{act:'qiang'}});assertGame(persisted);assert.equal(persisted.result.winner,1);assert.equal(persisted.result.robbed,0);

@@ -60,7 +60,7 @@ function resolveClaim(g,now){
   candidates.sort((a,b)=>priority[b.act]-priority[a.act]||((a.q-ph.from+4)%4)-((b.q-ph.from+4)%4));
   if(!candidates.length){turn(g,(ph.from+1)%4,true,false,now);return;}
   const cl=candidates[0],P=g.h.P[cl.q],t=ph.tile;
-  g.h.discards[ph.from].pop();
+  g.h.discards[ph.from].pop();g.h.lastDiscard=null;
   if(cl.act==='吃'){for(const u of cl.opt)remove(P,u);P.melds.push({type:'chi',tiles:[...cl.opt,t].sort((a,b)=>R.valOf(a)-R.valOf(b)),from:ph.from});}
   else{remove(P,t,cl.act==='杠'?3:2);P.melds.push({type:cl.act==='杠'?'gang':'peng',tiles:Array(cl.act==='杠'?4:3).fill(t),from:ph.from});}
   event(g,'座位 '+cl.q+' '+cl.act+' '+t);
@@ -165,7 +165,12 @@ export function nextWake(g,online,now=Date.now(),offlineAt={}){
 }
 export function seatState(g,p){
   const out=copy(g);out.h.wall=Array(g.h.wall.length).fill('…');
-  for(const q of seats)if(q!==p)out.h.P[q].hand=Array(g.h.P[q].hand.length).fill('白');
+  for(const q of seats)if(q!==p){
+    out.h.P[q].hand=Array(g.h.P[q].hand.length).fill('白');
+    // A concealed kong announces four tiles, never their identity to another
+    // seat. Omitted `from` is also how persisted older games record an an-gang.
+    for(const m of out.h.P[q].melds)if(m.type==='gang'&&!Number.isInteger(m.from))m.tiles=m.tiles.map(()=>null);
+  }
   if(g.h.turn!==p)out.h.drawn=null;
   out.phase={kind:g.phase.kind,id:g.phase.id,actor:g.phase.actor,from:g.phase.from,tile:g.phase.tile,deadline:g.phase.deadline,ready:g.phase.ready,
     offers:copy(g.phase.offers?.[p]||[]),responded:Object.hasOwn(g.phase.replies||{},p)};

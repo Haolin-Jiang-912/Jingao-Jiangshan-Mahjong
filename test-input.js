@@ -22,6 +22,12 @@ reset();run('G.h.turn=1');hand.events.pointerdown(pointer());hand.events.pointer
 reset();run('selectHandTile(0)');doc.events.keydown({key:'Enter',target:{closest(){return null;}},preventDefault(){}});assert.equal(run('G.h.discards[0].length'),0,'global Enter never discards');
 reset();ctx.Net={active:true,canAct:()=>false};button.onclick();hand.events.pointerdown(pointer());hand.events.pointerup(pointer());assert.equal(run('G.h.discards[0].length'),0,'disconnected seat cannot act');
 console.log('INPUT_OK: tap, double tap, drag, cancel, second finger, repeated confirmation, wrong turn, Enter and disconnected seat');
+// Both solo and network renderers hide concealed kongs; public melds retain an
+// explicit action label so they cannot be mistaken for an opponent's hand.
+assert.equal((run("meldFace({type:'gang',tiles:['3万','3万','3万','3万']})").match(/暗杠牌背/g)||[]).length,4);
+assert(!run("meldFace({type:'gang',tiles:['3万','3万','3万','3万']})").includes('3万'),'solo view also conceals opponent kong identity');
+assert.equal((run("meldFace({type:'gang',tiles:['3万','3万','3万','3万']},true)").match(/暗杠牌背/g)||[]).length,2);
+assert(run("meldFace({type:'peng',tiles:['3万','3万','3万'],from:1})").includes('meld-label\">碰'),'public meld is labelled');
 // A heartbeat must preserve the identity of a selected tile, even when server
 // insertion order differs from the sorted hand shown on screen.
 ctx.location.search='';ctx.addEventListener=()=>{};ctx.crypto=require('node:crypto').webcrypto;

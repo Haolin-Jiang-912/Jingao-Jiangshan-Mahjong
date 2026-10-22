@@ -162,7 +162,7 @@ function doDiscard(p,idx){
     if(w.length===ORDER.length){P.piao++;note('🀄 飘财！'+NAMES[p]+' 财吊状态打出财神，若胡牌 ×'+Math.pow(2,P.piao))}
     else if(p===0)note('财神已打出（未财吊，无翻倍）');
   }
-  G.h.discards[p].push(tile);sfx('discard');renderAll();
+  G.h.discards[p].push(tile);G.h.lastDiscard={p,tile};sfx('discard');renderAll();
   afterDiscard(p,tile);
 }
 /* ---------- 别人出牌后的吃碰杠窗口（本地人 + 远端真人 + AI 统一裁决） ---------- */
@@ -241,7 +241,7 @@ function resolveAI(p,tile,ais){
 }
 function doClaim(p,tile,cl){
   const q=cl.q,P=G.h.P[q];
-  G.h.discards[p].pop();
+  G.h.discards[p].pop();G.h.lastDiscard=null;
   if(cl.act==='杠'){
     for(let k=0;k<3;k++)P.hand.splice(P.hand.indexOf(tile),1);
     P.melds.push({type:'gang',tiles:[tile,tile,tile,tile],from:p});
