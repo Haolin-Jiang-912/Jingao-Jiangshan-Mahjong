@@ -1,482 +1,140 @@
-/* 鸡歪麻将厅 · 联机层（WebSocket 服务器中继，房主权威）
- * 替代 PeerJS P2P：浏览器通过 WebSocket 连到同一台服务器，由服务器做房间管理和消息转发。
- * 仍保持“房主权威”架构：游戏状态、AI、结算全在房主浏览器运行，服务器只转发。
- */
+/* All seats are clients of the cloud's authoritative game. No browser runs a
+ * second multiplayer game. Commands are acknowledged and retry with one ID. */
 (function(){
-  const DEF_NAMES=['林林','超超','含含','政政'];
-
-  const Net={
-    active:false,isHost:false,pid:-1,room:'',mode:'p8',started:false,
-    ws:null,wsUrl:'',
-    names:DEF_NAMES.slice(),
-    humanSeats:[true,false,false,false],
-    myName:'玩家',
-    onMessage:null,
-    msgQueue:[],_outbox:[],
-    diag:{ws:'初始化中',state:'-',lastIn:'-',lastOut:'-',seqIn:0,seqOut:0,err:''},
-
-    log(m){console.log('[Net]',m);},
-    status(s){
-      const el=document.getElementById('netStatus');if(el)el.textContent=s;
-      this.diag.state=s;this.updateDiag();
-    },
-    updateDiag(){
-      const el=document.getElementById('netDiag');if(!el)return;
-      el.innerHTML='<b>联机诊断</b><br>'+
-        'ws: '+this.diag.ws+'<br>'+
-        'state: '+this.diag.state+'<br>'+
-        'in: '+this.diag.seqIn+' '+this.diag.lastIn+'<br>'+
-        'out: '+this.diag.seqOut+' '+this.diag.lastOut+(this.diag.err?'<br><span style="color:#ff9b9b">'+this.diag.err+'</span>':'');
-    },
-
+  const Net={active:false,serverAuthoritative:true,isHost:false,pid:-1,room:'',mode:'p8',names:['林林','超超','含含','政政'],online:[],
+    ws:null,ready:false,pending:null,epoch:null,seq:-1,retries:0,lastSeen:0,_timer:null,_retry:null,_fatal:false,_resultKey:null,
     init(params){
-      const room=(params.get('room')||'').trim().toUpperCase();
-      const role=params.get('role')||params.get('net');
-      if(!room||!role)return;
-      this.active=true;this.room=room;this.isHost=(role==='host');
-      this.mode=params.get('mode')==='ju'?'ju':'p8';
-      this.myName=decodeURIComponent(params.get('name')||'玩家').slice(0,8)||'玩家';
-      this.names=[this.isHost?this.myName:'房主',null,null,null];
-      if(!this.isHost)this.pid=-1;
-      this.token='';this._joined=false;this._fatal=false;this._dc={};
-      try{ this.token=sessionStorage.getItem('jw-net-token-'+room)||''; }catch(e){} /* 刷新页面仍可恢复身份 */
-      this.wsUrl=this.getWsUrl(params);
-      this.connect(0);
+      this.room=(params.get('room')||'').trim().toUpperCase();const role=params.get('role')||params.get('net');if(!this.room||!role)return;
+      this.active=true;this.isHost=role==='host';
+      if(!/^[A-Z0-9]{4,8}$/.test(this.room)||!['host','client'].includes(role)){this._fatal=true;return;}
+      this.role=role;this.mode=params.get('mode')==='ju'?'ju':'p8';this.myName=(params.get('name')||'玩家').slice(0,8);
+      this.storageKey='jw-v2-token-'+this.room+'-'+role;try{this.token=sessionStorage.getItem(this.storageKey)||'';}catch{this.token='';}
+      this.wsUrl=params.get('ws')||((location.protocol==='https:'?'wss://':'ws://')+location.host);
+      this.connect();this._timer=setInterval(()=>this.maintain(),2000);
     },
-
-    defaultWsUrl(){
-      /* 默认与页面同源：部署后（如 Render/natapp）页面和 WebSocket 是同一服务，零配置 */
-      if(location.protocol==='https:')return 'wss://'+location.host;
-      return 'ws://'+location.host;
+    status(text){const e=$('#netStatus');if(e)e.textContent=text;},
+    updateControls(){
+      if(G&&G.h&&typeof renderHandControls==='function')renderHandControls();
+      for(const b of document.querySelectorAll?.('#actionBar button,#modalBtns button[data-m]')||[])b.disabled=!this.ready||!!this.pending;
     },
-
-    getWsUrl(params){
-      /* 优先级：链接显式 ws 参数 > localStorage 调试覆盖 > 同源默认 */
-      let u=params.get('ws');
-      if(u){
-        u=decodeURIComponent(u);
-        if(!/^wss?:\/\//i.test(u)) u=(location.protocol==='https:'?'wss://':'ws://')+u;
-        return u;
-      }
-      try{
-        const saved=localStorage.getItem('jw-ws-override');
-        if(saved&&/^wss?:\/\//i.test(saved))return saved;
-      }catch(e){}
-      return this.defaultWsUrl();
-    },
-
-    connect(retryCount=0){
-      const reconnect=retryCount>0;
-      this.status(reconnect?('重连中（第 '+retryCount+' 次）…'):'连接服务器…');
-      this.diag.ws='连接 '+this.wsUrl.replace(/^wss?:\/\//,'');
-      this.updateDiag();
-      const qs='room='+this.room+'&role='+(this.isHost?'host':'client')
-        +'&name='+encodeURIComponent(this.myName)+'&mode='+this.mode
-        +(this.token?'&token='+this.token:'');
-      try{
-        this.ws=new WebSocket(this.wsUrl+'?'+qs);
-      }catch(e){
-        this.lobbyError('创建 WebSocket 失败：'+e);
-        return;
-      }
-      let opened=false;
-      this.ws.onopen=()=>{opened=true;this.diag.ws='已连接';this.updateDiag();const q=this._outbox.splice(0);q.forEach(m=>this.sendRaw(m));};
-      this.ws.onmessage=(ev)=>{
-        let d;
-        try{d=JSON.parse(ev.data);}catch(e){return;}
-        this.diag.seqIn++;this.diag.lastIn=d.type+(d.seq?('#'+d.seq):'');this.updateDiag();
-        this.dispatch(d);
-      };
-      this.ws.onclose=()=>{
-        this.diag.ws='已断开';this.updateDiag();
-        if(this._syncTimer){clearInterval(this._syncTimer);this._syncTimer=null;}
-        this.onWsClosed(opened,retryCount);
-      };
-      this.ws.onerror=()=>{
-        this.diag.err='无法连接服务器';this.updateDiag();
+    connect(){
+      if(this._fatal)return;clearTimeout(this._retry);this.ready=false;this.updateControls();
+      const previous=this.ws;this.ws=null;if(previous)try{previous.close();}catch{}
+      this.status(this.retries?'重新连接并同步牌局…':'正在连接云端牌桌…');
+      const u=new URL(this.wsUrl);u.search=new URLSearchParams({room:this.room,role:this.role,name:this.myName,mode:this.mode,protocol:2,...(this.token?{token:this.token}:{})}).toString();
+      let ws;try{ws=new WebSocket(u.toString());}catch{this.reconnect();return;}this.ws=ws;
+      ws.onopen=()=>{if(this.ws===ws)this.lastSeen=Date.now();};
+      ws.onmessage=e=>{if(this.ws!==ws)return;let m;try{m=JSON.parse(e.data);}catch{return;}this.lastSeen=Date.now();this.dispatch(m);};
+      ws.onerror=()=>{};
+      ws.onclose=e=>{if(this.ws!==ws)return;this.ready=false;this.updateControls();
+        if(e.code===4001){this._fatal=true;this.status('此座位已在另一页面打开');note('座位已切换到另一页面，请在那个页面继续。');return;}
+        if(!this._fatal)this.reconnect();
       };
     },
-
-    /* 断线自动重连：未入座时重试 4 次（退避 2/4/8/16s）；已入座后断线重连 6 次（间隔 3s） */
-    onWsClosed(opened,retryCount){
-      if(this._fatal)return; // 服务器明确拒绝（房间不存在/已满等），不重试
-      const maxRetry=this._joined?6:4;
-      if(retryCount>=maxRetry){
-        this.status('多次重连失败');
-        this.lobbyError('连接服务器失败（已自动重试 '+maxRetry+' 次）。请检查网络后刷新页面；若刷新后仍失败，请让房主重新开房。');
-        return;
-      }
-      const wait=this._joined?3000:(2000*(retryCount+1));
-      const why=opened?'连接断开':'连接失败';
-      this.status(why+'，'+Math.round(wait/1000)+' 秒后自动重试（'+(retryCount+1)+'/'+maxRetry+'）…');
-      setTimeout(()=>{this.connect(retryCount+1);},wait);
+    reconnect(){
+      if(this._retry||this._fatal)return;this.ready=false;this.updateControls();this.status('连接中断，正在恢复同一牌局…');
+      const delay=Math.min(15000,1000*2**Math.min(this.retries++,4));
+      this._retry=setTimeout(()=>{this._retry=null;this.connect();},delay);
     },
-
-    lobbyError(msg){
-      this.status('联机失败');
-      const el=document.getElementById('lobbyList');
-      if(el)el.innerHTML='<p style="color:#ffb3b3;font-size:.82rem;line-height:1.6">⚠ '+msg+'</p>';
-      this.diag.err=msg;this.updateDiag();
-      alert(msg);
+    raw(msg){if(this.ws?.readyState!==1)return false;try{this.ws.send(JSON.stringify(msg));return true;}catch{return false;}},
+    maintain(){
+      if(!this.active||this._fatal)return;
+      if(this.ws?.readyState===1){
+        if(Date.now()-this.lastSeen>12000){this.ready=false;this.updateControls();this.connect();return;}
+        if(this.pending&&Date.now()-this.pending.sentAt>2000){this.pending.sentAt=Date.now();this.raw(this.pending.message);}
+        this.raw({type:'sync'});
+      }else if(!this._retry)this.reconnect();
     },
-
-    onHostOpen(){
-      this.status('房间号：'+this.room+'（等待加入）');
-      this.showLobby();
+    dispatch(m){
+      if(m.type==='error'){this._fatal=true;this.ready=false;this.status(m.text||'房间已结束');this.updateControls();
+        showModal('<h3>暂时无法进入牌桌</h3><p>'+escapeHTML(m.text||'请重新进入')+'</p>',[{label:'返回大厅',fn:()=>location.href='index.html'}]);return;}
+      if(m.type==='welcome'){
+        if(m.protocol!==2){this._fatal=true;this.status('请刷新页面升级游戏');return;}
+        this.pid=m.pid;this.token=m.token;try{sessionStorage.setItem(this.storageKey,this.token);}catch{}
+        this.ready=true;this.retries=0;this.applyState(m.snapshot);
+        // A lost ACK is recovered by resending exactly the original command.
+        if(this.pending){this.pending.sentAt=Date.now();this.raw(this.pending.message);}
+      }else if(m.type==='state'){this.ready=true;this.applyState(m);}
+      else if(m.type==='ack'){
+        const mine=this.pending?.message.id===m.id;
+        if(mine)this.pending=null;
+        this.applyState(m.snapshot);
+        if(mine&&!m.ok)note(m.error||'操作没有生效，已同步，请重新选择');
+        this.updateControls();
+      }
     },
-
-    sendRaw(msg){
-      if(this.ws&&this.ws.readyState===WebSocket.OPEN){
-        try{this.ws.send(JSON.stringify(msg));this.diag.seqOut++;this.diag.lastOut=msg.type;this.updateDiag();return true;}
-        catch(e){this.log('send err '+e);}
-      }
-      if(['ack','sync','rename'].includes(msg.type)){this._outbox.push(msg);}
-      return false;
+    applyState(s){
+      if(!s||s.protocol!==2||this.pid<0)return;
+      if(this.epoch===s.epoch&&s.seq<this.seq)return;
+      const oldDecision=G?.phase?.id,oldWarning=G?.h?.warnWealth,oldSeq=this.seq,oldEpoch=this.epoch;
+      this.epoch=s.epoch;this.seq=s.seq;this.names=s.names;this.online=s.online;this.mode=s.mode;
+      if(!s.G){this.showLobby(s);this.status('房间 '+this.room+' · 云端已同步');return;}
+      G=this.rotateG(s.G,this.pid);for(let i=0;i<4;i++)NAMES[i]=this.names[(this.pid+i)%4];
+      if(oldDecision===G.phase.id&&oldWarning)G.h.warnWealth=true;
+      // Duplicate heartbeat snapshots do not rebuild hand buttons or steal focus.
+      if(oldEpoch!==s.epoch||oldSeq!==s.seq||oldDecision!==G.phase.id)renderAll();
+      this.renderPhase();this.status(this.pending?'确认操作中':'已同步');
+      const status=$('#netStatus');if(status)status.title='房间 '+this.room+' · 版本 '+this.seq;
     },
-
-    /* 客户端 -> 房主 */
-    toHost(msg){return this.sendRaw(msg);},
-
-    /* 房主 -> 所有客户端 */
-    broadcast(msg){if(this.isHost)return this.sendRaw(msg);return false;},
-
-    /* 兼容 PeerJS 时代的 lobby 刷新 */
-    broadcastLobby(){
-      if(this.isHost){
-        this.broadcast({type:'lobby',count:this.names.filter(Boolean).length,players:this.names.slice(),max:4,room:this.room});
-      }
-      this.updateLobbyList();
+    rotateG(g,p){
+      const out=JSON.parse(JSON.stringify(g)),at=i=>(p+i)%4;
+      out.h.P=[0,1,2,3].map(i=>g.h.P[at(i)]);out.h.discards=[0,1,2,3].map(i=>g.h.discards[at(i)]);
+      // Server hands retain draw order; the view uses sorted order. Normalize on
+      // EVERY snapshot, including heartbeats that intentionally skip rendering.
+      out.h.P[0].hand.sort((a,b)=>valOf(a)-valOf(b));
+      out.h.dealer=(g.h.dealer-p+4)%4;out.h.turn=(g.h.turn-p+4)%4;
+      if(g.h.dice?.pairs)out.h.dice.pairs=[0,1,2,3].map(i=>g.h.dice.pairs[at(i)]);
+      if(out.h.lastDiscard)out.h.lastDiscard.p=(out.h.lastDiscard.p-p+4)%4;
+      out.scores=[0,1,2,3].map(i=>g.scores[at(i)]);out.specials=[0,1,2,3].map(i=>g.specials[at(i)]);return out;
     },
-
-    isRemote(p){return this.isHost && p>=1 && p<=3 && this.humanSeats[p]===true;},
-    remoteConn(p){return this.isRemote(p)?{send:(m)=>this.broadcast(Object.assign({},m))}:null;},
-
-    dispatch(data){
-      // 房主收到客户端动作
-      if(this.isHost && data.type==='action'){
-        const pid=data.fromPid!=null?data.fromPid:data.pid;
-        if(pid!=null && window.netRemoteAction)window.netRemoteAction(pid,data.action||{});
-        return;
-      }
-      if(this.isHost && data.type==='claimResponse'){
-        const pid=data.fromPid!=null?data.fromPid:data.pid;
-        if(pid!=null && window.netClaimMsg)window.netClaimMsg(pid,data.res||null);
-        return;
-      }
-      if(this.isHost && data.type==='join'){
-        const pid=data.pid;
-        if(pid!=null && pid>=1 && pid<=3){this.names[pid]=(data.name||('玩家'+pid)).slice(0,8);this.humanSeats[pid]=true;this.broadcastLobby();}
-        return;
-      }
-      if(this.isHost && data.type==='ack'){
-        const pid=data.fromPid!=null?data.fromPid:data.pid;
-        const name=(data.name||this.names[pid]||'玩家'+pid).slice(0,8);
-        if(pid!=null && pid>=1 && pid<=3){this.names[pid]=name;this.humanSeats[pid]=true;this.log('client '+pid+' ACK');this.broadcastLobby();this.broadcastState();}
-        return;
-      }
-      if(this.isHost && data.type==='rename'){
-        const pid=data.fromPid!=null?data.fromPid:data.pid;
-        if(pid!=null && pid>=1 && pid<=3){this.names[pid]=(data.name||this.names[pid]).slice(0,8);this.broadcastLobby();}
-        return;
-      }
-      if(this.isHost && data.type==='sync'){
-        const pid=data.fromPid!=null?data.fromPid:data.pid;
-        try{this.broadcastState(pid);}catch(e){this.log('sync err '+e)}
-        return;
-      }
-
-      if(this.isHost && data.type==='leave'){
-        /* 客人掉线：保留座位 90 秒等待重连 */
-        const pid=data.pid;
-        if(pid>=1&&pid<=3){
-          this._dc[pid]=true;this.humanSeats[pid]=false;
-          if(typeof note==='function')note((this.names[pid]||('玩家'+pid))+' 掉线了，等待重连…');
-          this.broadcast({type:'notify',text:(this.names[pid]||('玩家'+pid))+' 掉线了，AI 暂代其出牌…'});
-          if(G&&G.h&&G.h.turn===pid&&typeof aiPlay==='function')setTimeout(()=>{if(G&&G.h&&!G.h.over&&G.h.turn===pid&&!this.isRemote(pid))aiPlay(pid);},0);
-        }
-        return;
-      }
-      if(this.isHost && data.type==='rejoin'){
-        /* 客人重连恢复：重推完整状态，若是他的回合再补发 turn */
-        const pid=data.pid;
-        if(data.name)this.names[pid]=data.name;
-        if(pid!=null && pid>=1 && pid<=3)this.humanSeats[pid]=true;
-        this._dc[pid]=false;
-        try{this.broadcastState();}catch(e){}
-        if(G&&G.h&&G.h.turn===pid)this.sendTurn(pid);
-        if(typeof note==='function')note((this.names[pid]||('玩家'+pid))+' 已重新连接');
-        this.broadcast({type:'notify',text:(this.names[pid]||('玩家'+pid))+' 已重新连接'});
-        return;
-      }
-      if(this.isHost && data.type==='welcome'){
-        /* 房主入座/重连：记录 token；若牌局已在进行则重推状态给所有客人 */
-        if(data.token)this.token=data.token;
-        try{sessionStorage.setItem('jw-net-token-'+this.room,this.token);}catch(e){}
-        this.names=(data.names||this.names).slice();
-        this._joined=true;
-        if(G&&G.h){
-          this.status('已重新连接，同步牌局…');
-          setTimeout(()=>{try{this.broadcastState();}catch(e){}},300);
-        }
-        return;
-      }
-
-      // 客户端收到房主/服务器消息
-      if(!this.isHost && data.type==='welcome'){
-        this.pid=data.pid;this.names=(data.names||this.names).slice();
-        if(data.token)this.token=data.token;
-        try{sessionStorage.setItem('jw-net-token-'+this.room,this.token);}catch(e){}
-        this._joined=true;
-        if(this._syncTimer){clearInterval(this._syncTimer);this._syncTimer=null;}
-        this.toHost({type:'ack',pid:this.pid,name:this.myName});
-        if(!this._syncTimer)this._syncTimer=setInterval(()=>{if(!G||!G.h)this.toHost({type:'sync'});else{clearInterval(this._syncTimer);this._syncTimer=null;}},2000);
-        try{this.toHost({type:'sync'});}catch(e){}
-        if(G&&G.h){
-          /* 重连恢复：立刻拉取最新牌局 */
-          this.status('已重新连接，同步牌局…');
-          if(!this._syncTimer)this._syncTimer=setInterval(()=>{if(!G||!G.h)this.toHost({type:'sync'});else{clearInterval(this._syncTimer);this._syncTimer=null;}},2000);
-          try{this.toHost({type:'sync'});}catch(e){}
-        }else{
-          this.status('已连接房间 '+this.room+'，等待房主…');
-        }
-        this.updateLobbyList();
-        return;
-      }
-      if(data.type==='lobby'){
-        this.names=(data.players||this.names).slice();this.applyNames();
-        this.updateLobbyList();return;
-      }
-      if(!this.isHost && data.type==='start'){
-        this.names=(data.names||this.names).slice();
-        this.applyNames();for(let i=0;i<4;i++)if(typeof NAMES!=='undefined')NAMES[i]=this.names[(this.pid+i)%4]||NAMES[i];
-        const m=document.getElementById('modal');if(m)m.classList.remove('show');
-        this.status('游戏开始，同步中…');
-        if(!this._syncTimer)this._syncTimer=setInterval(()=>{if(!G||!G.h)this.toHost({type:'sync'});else{clearInterval(this._syncTimer);this._syncTimer=null;}},2000);
-        try{this.toHost({type:'sync'});}catch(e){}
-        return;
-      }
-      if(!this.isHost && data.type==='state'){
-        if(data.toPid!=null&&Number(data.toPid)!==this.pid)return;
-        if(!data.G||!data.G.h)return;
-        try{
-          this.applyNames();for(let i=0;i<4;i++)if(typeof NAMES!=='undefined')NAMES[i]=this.names[(this.pid+i)%4]||NAMES[i];
-          G=this.rotateG(data.G,this.pid);
-          if(this._syncTimer&&G&&G.h){clearInterval(this._syncTimer);this._syncTimer=null;}
-          if(typeof renderAll==='function'){
-            renderAll();
-            const m=document.getElementById('modal');
-            if(m&&m.classList.contains('show')&&!G.h.over)m.classList.remove('show');
-          }
-          this.status(G.h.over?'本盘结束':NAMES[G.h.turn]+' 行牌（同步）');
-        }catch(e){console.warn('client state err',e);}
-        return;
-      }
-      if(!this.isHost && data.type==='turn'){
-        if(data.pid===this.pid&&typeof humanOptions==='function')humanOptions();
-        return;
-      }
-      if(!this.isHost && data.type==='claimOffer'){
-        if(data.pid!==this.pid)return;
-        if(typeof setActions==='function'){
-          const wealth=data.wealth;
-          const hasWealth=o=>o.act==='qiang'?false:(o.act==='吃'?data.tile===wealth||o.opt.includes(wealth):data.tile===wealth);
-          const anyW=(data.options||[]).some(hasWealth);
-          const opts=(data.options||[]).map(o=>({label:(hasWealth(o)?'⚠ ':'')+(o.act==='qiang'?'抢杠胡 '+data.tile+'！':o.act+(o.opt?' '+o.opt.join(''):'')),
-            fn:()=>this.sendClaimResponse({act:o.act,opt:o.opt||null})}));
-          setActions([...opts,{label:'过',fn:()=>this.sendClaimResponse(null)}]);
-          if(typeof note==='function')note('可以 '+[...new Set((data.options||[]).map(o=>o.act==='qiang'?'抢杠胡':o.act))].join(' / ')+'（'+data.tile+'）'+(anyW?' ⚠ 涉及财神牌，请谨慎':''));
-        }
-        return;
-      }
-      if(!this.isHost && data.type==='modal'){
-        if(typeof showModal==='function')showModal(data.html,data.final?[{label:'再来一局',fn:()=>location.reload()}]:[{label:'知道了',fn:()=>{}}]);
-        return;
-      }
-      if(!this.isHost && data.type==='notify'){
-        if(typeof note==='function')note(data.text||'');
-        return;
-      }
-      if(data.type==='error'){
-        this._fatal=true; // 服务器明确拒绝，停止自动重试
-        this.lobbyError(data.text||'联机错误');return;
-      }
-      if(this.onMessage){this.onMessage(data);}
-      else this.msgQueue.push(data);
+    canAct(){return !!(this.ready&&!this.pending&&this.ws?.readyState===1&&G?.phase?.kind==='turn'&&G.phase.actor===this.pid&&!G.h.over);},
+    sendAction(action){return this.command(action);},
+    command(action){
+      if(!this.ready||this.pending||this.ws?.readyState!==1){this.status('正在同步，请稍候再操作');return false;}
+      const message={type:'command',protocol:2,id:crypto.randomUUID(),epoch:this.epoch,decision:G?.phase?.id||null,action};
+      this.pending={message,sentAt:Date.now()};this.raw(message);this.status('正在等待云端确认…');this.updateControls();return true;
     },
-
-    rename(name){
-      const n=(name||this.myName).slice(0,8);
-      this.myName=n;
-      if(this.isHost){this.names[0]=n;this.broadcastLobby();}
-      else this.toHost({type:'rename',pid:this.pid,name:n});
+    renderPhase(){
+      if(!G)return;const ph=G.phase;
+      if(ph.kind==='handEnd'||ph.kind==='matchEnd'){this.renderResult();return;}
+      $('#modal').classList.remove('show');this._resultKey=null;
+      const actionKey=ph.id+':'+ph.responded+':'+(this.pending?.message.id||'')+':'+this.ready;
+      if(this._actionKey===actionKey){this.updateControls();return;}this._actionKey=actionKey;
+      if(this.pending){clearActions();note('操作已提交，等待云端确认…');this.updateControls();return;}
+      const acts=[];
+      if((ph.kind==='claim'||ph.kind==='rob')&&ph.offers.length&&!ph.responded){
+        for(const o of ph.offers)acts.push({label:o.act==='qiang'?'抢杠胡':o.act+(o.opt?' '+o.opt.join(' '):''),fn:()=>this.command({act:'claim',choice:o})});
+        acts.push({label:'过',fn:()=>this.command({act:'claim',choice:null})});
+        note('有人打出 '+ph.tile+'，请选择操作（限时响应）');
+      }else if(ph.kind==='turn'&&ph.actor===this.pid){
+        for(const o of G.options||[])acts.push({label:o.act==='win'?'胡！':(o.act==='angang'?'暗杠 ':'补杠 ')+o.t,fn:()=>this.command(o)});
+        note('轮到你了：点牌只选中，再点「打出」确认');
+      }else note(ph.responded?'已响应，等待其他同学…':'等待 '+this.names[ph.actor??ph.from]+' 行牌');
+      setActions(acts);this.updateControls();
     },
-
-    sendTurn(p,initial=false){
-      if(this.isHost) this.broadcast({type:'turn',pid:p,toPid:p,initial:!!initial});
+    renderResult(){
+      const ph=G.phase,key=ph.id+':'+ph.ready.join(',')+':'+!!this.pending;if(this._resultKey===key)return;this._resultKey=key;
+      const r=G.result;let html='';
+      if(r.kind==='match')html='<h3>牌局总结算</h3>'+r.rank.map((p,i)=>'<p>第 '+(i+1)+' 名 · '+escapeHTML(this.names[p])+' · '+r.scores[p]+' 分</p>').join('');
+      else if(r.kind==='draw')html='<h3>流局</h3><p>'+escapeHTML(r.text)+'</p>';
+      else html='<h3>'+escapeHTML(this.names[r.winner])+(r.robbed===null?' 自摸！':' 抢杠胡！')+'</h3><div class="wintiles">'+r.tiles.map(t=>face(t,'mtile')).join('')+'</div><table class="mtable">'+r.detail.map(d=>'<tr><td>'+escapeHTML(d[0])+'</td><td>'+d[1]+'</td></tr>').join('')+'<tr><td>每家支付</td><td>'+r.paid+' 分</td></tr></table>';
+      const ready=ph.ready.includes(this.pid);
+      html+='<p>'+(ready?'你已准备，等待其他同学':'所有在线同学确认后继续')+'</p>';
+      showModal(html,ready||this.pending?[]:[{label:ph.kind==='matchEnd'?'再来一局':'确认结算，继续',fn:()=>this.command({act:'ready'})}]);
     },
-
-    sendAction(action){
-      this.toHost({type:'action',pid:this.pid,action});
-    },
-
-    sendClaimOffer(p,tile,options){
-      const wealth=G&&G.h?G.h.wealth:null;
-      if(this.isHost) this.broadcast({type:'claimOffer',pid:p,toPid:p,tile,wealth,options:options.map(o=>({act:o.act,opt:o.opt||null}))});
-    },
-
-    sendClaimResponse(res){
-      this.toHost({type:'claimResponse',pid:this.pid,res:res||null});
-    },
-
-    /* 房主按座位发送状态：本人手牌可见，另外三家只显示牌背 */
-    broadcastState(targetPid=null){
-      if(!this.active||!this.isHost)return;
-      const base=JSON.parse(JSON.stringify(G||{}));
-      if(!base||!base.h){this._statePending=true;setTimeout(()=>{if(this.isHost&&G&&G.h)this.broadcastState(targetPid);},250);return;}
-      const wl=base.h.wall?base.h.wall.length:0;
-      base.h.wall=new Array(wl).fill('…');
-      const sendOne=pid=>{
-        const state=JSON.parse(JSON.stringify(base));
-        for(let q=0;q<4;q++){
-          if(q!==pid)state.h.P[q].hand=new Array(state.h.P[q].hand.length).fill('白');
-        }
-        this.broadcast({type:'state',G:state,toPid:pid,seq:++this.diag.seqOut});
-      };
-      if(targetPid!=null){
-        const pid=Number(targetPid);
-        if(pid>=1&&pid<=3)sendOne(pid);
-      }else{
-        for(let pid=1;pid<=3;pid++)if(this.isRemote(pid))sendOne(pid);
-      }
-      this.diag.lastOut='state';this.updateDiag();
-    },
-
-    rotateG(g,pid){
-      const r=i=>(pid+i)%4;
-      const h=g.h?Object.assign({},g.h,{
-        dealer:(g.h.dealer-pid+4)%4,turn:(g.h.turn-pid+4)%4,
-        P:[0,1,2,3].map(i=>g.h.P[r(i)]),
-        discards:[0,1,2,3].map(i=>g.h.discards[r(i)])
-      }):null;
-      return Object.assign({},g,{h,scores:[0,1,2,3].map(i=>g.scores[r(i)]),specials:[0,1,2,3].map(i=>g.specials[r(i)])});
-    },
-
-    inviteUrl(){
-      /* 干净链接：只带房间号；ws 与默认一致时不写入，换服务器才附加 */
-      const extra=(this.wsUrl&&this.wsUrl!==this.defaultWsUrl())?'&ws='+encodeURIComponent(this.wsUrl):'';
-      try{
-        const u=new URL(location.href);u.search='';
-        return u.toString()+'?v=10&mode='+this.mode+'&role=client&room='+this.room+extra;
-      }catch(e){return 'game.html?v=10&mode='+this.mode+'&role=client&room='+this.room+extra;}
-    },
-
-    showLobby(){
-      const m=document.getElementById('modal'); if(!m)return;
-      const body=document.getElementById('modalBody');
-      const btns=document.getElementById('modalBtns');
-      const inv=this.inviteUrl();
-      body.innerHTML='<h3>'+(this.isHost?'创建房间':'加入房间')+'</h3>'+
-        '<p>房间号：<b style="font-size:1.4rem;letter-spacing:2px">'+this.room+'</b></p>'+
-        (this.isHost?
-          '<div style="margin:.5rem 0;padding:.6rem;background:#0b1d3d;border:2px dashed #f3d576;border-radius:8px">'+
-          '<p style="margin:0 0 .3rem;font-size:.72rem;color:#9fd0ff">📱 把这条链接发给好友，点击即可自动加入：</p>'+
-          '<a href="'+inv+'" style="display:block;padding:.4rem;background:#17305d;color:#ffefaa;font-size:.68rem;word-break:break-all;border:1px solid #f3d576;border-radius:4px;text-decoration:none;line-height:1.5">'+inv+'</a>'+
-          '<div style="margin-top:.5rem;display:flex;gap:6px;justify-content:center;flex-wrap:wrap">'+
-          '<button id="copyLink" style="padding:.35rem .6rem;font-size:.7rem">📋 复制链接</button>'+
-          '<button id="shareLink" style="padding:.35rem .6rem;font-size:.7rem">📤 分享给好友</button>'+
-          '<button id="copyRoom" style="padding:.35rem .6rem;font-size:.7rem">复制房间号</button></div></div>'
-          :'<p style="margin:.5rem 0;display:flex;gap:8px;justify-content:center"><button id="copyRoom" style="padding:.35rem .7rem;font-size:.72rem">复制房间号</button></p>')+
-        '<div id="lobbyList">等待连接…</div>'+
-        '<div id="netDiag" style="margin-top:.6rem;padding:.4rem;background:#0b1d3d88;border:1px dashed #4a7ab8;border-radius:6px;font-size:.6rem;color:#cfe8ff;text-align:left;line-height:1.6"></div>'+
-        (this.isHost?'<p style="font-size:.65rem;color:#cfe8ff">把邀请链接发给好友，人满或 1 人以上即可开始</p>':
-          '<p style="font-size:.65rem;color:#cfe8ff">等待房主开始游戏…</p>');
-      btns.innerHTML=this.isHost?
-        '<button id="netStart">开始游戏</button><button id="netCancel">返回首页</button>':
-        '<button id="netCancel">返回首页</button>';
-      m.classList.add('show');
-      this.updateDiag();
-      const cancel=document.getElementById('netCancel');
-      if(cancel)cancel.onclick=()=>{m.classList.remove('show');location.href='index.html';};
-      const copyRoom=document.getElementById('copyRoom');
-      const copyLink=document.getElementById('copyLink');
-      const shareLink=document.getElementById('shareLink');
-      const doCopy=async(text,btn,okText)=>{
-        try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(text);btn.textContent=okText;return;}}catch(e){}
-        const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');btn.textContent=okText;}catch(err){btn.textContent='复制失败';}document.body.removeChild(ta);
-      };
-      if(copyRoom)copyRoom.onclick=()=>doCopy(this.room,copyRoom,'已复制房间号');
-      if(copyLink)copyLink.onclick=()=>doCopy(inv,copyLink,'已复制链接');
-      if(shareLink)shareLink.onclick=async()=>{
-        if(navigator.share){
-          try{await navigator.share({title:'鸡歪麻将厅',text:'来打麻将！房间号 '+this.room,url:inv});}catch(e){}
-        }else{doCopy(inv,shareLink,'已复制链接，去粘贴给好友');}
-      };
-      if(this.isHost){
-        const start=document.getElementById('netStart');
-        start.onclick=()=>{
-          const humans=this.names.filter(Boolean).length;
-          if(humans<2){alert('至少等1位好友加入');return;}
-          if(humans<4&&!confirm('人数不足4人，空位由 AI 补齐，确定开始？'))return;
-          for(let i=0;i<4;i++)if(!this.names[i])this.names[i]=DEF_NAMES[i];
-          this.broadcastLobby();
-          this.started=true;
-          m.classList.remove('show');
-          this.broadcast({type:'start',names:this.names.slice()});
-          if(window.startNetworkGame)window.startNetworkGame(this.mode);
-        };
-      }
-      this.updateLobbyList();
-    },
-
-    applyNames(){
-      if(typeof NAMES!=='undefined'){for(let i=0;i<4;i++)NAMES[i]=this.names[i]||NAMES[i];}
-    },
-
-    updateLobby(data){
-      const players=(data?data.players:this.names).slice();
-      const el=document.getElementById('lobbyList'); if(!el)return;
-      const seats=players.map((n,i)=>{
-        const isMe=(this.isHost&&i===0)||(!this.isHost&&i===this.pid);
-        const isHostSeat=i===0;
-        const empty=!n;
-        const status=isHostSeat?'房主':(empty?'等待加入':'已就绪');
-        const avatar=isHostSeat?'👑':(empty?'+':String.fromCharCode(0x2460+i));
-        return '<div class="seat '+(isHostSeat?'host ':'')+(empty?'empty ':'')+(isMe?'me':'')+'" data-seat="'+i+'">'+
-          '<div class="seat-avatar">'+avatar+'</div>'+
-          '<div class="seat-name">'+(empty?'空位':n)+'</div>'+
-          '<div class="seat-status">'+status+(isMe?'（你）':'')+'</div>'+
-          (isMe?'<button class="seat-edit">改名</button>':'')+
-          '</div>';
-      }).join('');
-      el.innerHTML='<div class="seats">'+seats+'</div>';
-      el.querySelectorAll('.seat-edit').forEach(btn=>{
-        btn.onclick=()=>{
-          const newName=prompt('输入你的昵称：',this.myName);
-          if(newName!==null)this.rename(newName.trim()||this.myName);
-        };
-      });
-      const btn=document.getElementById('netStart');
-      if(btn)btn.disabled=(this.isHost && this.names.filter(Boolean).length<2);
-    },
-
-    updateLobbyList(){
-      if(!this.isHost && this.pid<0){
-        const el=document.getElementById('lobbyList');
-        if(el)el.innerHTML='<p style="color:#9fd0ff;font-size:.9rem;line-height:1.7">🔄 正在连接房间 <b>'+this.room+'</b>…<br><small>如果长时间没反应，请检查服务器地址、房间号是否正确</small></p>';
-        return;
-      }
-      this.updateLobby({players:this.names.slice()});
+    inviteUrl(){const u=new URL(location.href);u.search=new URLSearchParams({role:'client',room:this.room,mode:this.mode,...(this.wsUrl!==((location.protocol==='https:'?'wss://':'ws://')+location.host)?{ws:this.wsUrl}:{})});return u.toString();},
+    showLobby(s){
+      const key=s.epoch+':'+s.seq+':'+!!this.pending;if(this._lobbyKey===key)return;this._lobbyKey=key;
+      $('#modal').classList.add('show');
+      $('#modalBody').innerHTML='<h3>'+ (this.isHost?'课桌已经拼好':'加入同学的牌桌')+'</h3><p>房间号：<strong>'+escapeHTML(this.room)+'</strong></p><p>云端统一发牌和算分 · 2–4 人，空位由 AI 补齐</p><div class="seats">'+s.players.map((name,p)=>'<div class="seat '+(!name?'empty':'')+'"><div class="seat-name">'+escapeHTML(name||'AI 空位')+'</div><div class="seat-status">'+(p===this.pid?'你 · ':'')+(s.online.includes(p)?'已就绪':name?'等待重连':'等待同学')+'</div></div>').join('')+'</div><p class="invite-label">邀请链接</p><input id="inviteLink" class="lobby-input" readonly aria-label="邀请链接" value="'+escapeHTML(this.inviteUrl())+'"><p id="copyStatus" role="status"></p>';
+      $('#modalBtns').innerHTML='<button id="copyInvite">复制邀请</button>'+(this.isHost?'<button id="netStart" '+(!this.ready||this.pending||s.online.length<2?'disabled':'')+'>开始游戏</button>':'')+'<button id="netCancel">返回大厅</button>';
+      $('#copyInvite').onclick=async()=>{try{await navigator.clipboard.writeText(this.inviteUrl());$('#copyStatus').textContent='已复制，发给同学即可';}catch{$('#inviteLink').select();$('#copyStatus').textContent='请复制上方链接';}};
+      if($('#netStart'))$('#netStart').onclick=()=>this.command({act:'start'});
+      $('#netCancel').onclick=()=>location.href='index.html';
     }
   };
-
-  const reconnectIfNeeded=()=>{if(Net.active&&(!Net.ws||Net.ws.readyState!==WebSocket.OPEN)&&!Net._fatal){Net.connect(0);}};
-  window.addEventListener('online',reconnectIfNeeded);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)reconnectIfNeeded();});
-  Net.init(new URLSearchParams(location.search));
-  if(Net.active){
-    if(document.readyState==='loading'){
-      document.addEventListener('DOMContentLoaded',()=>Net.showLobby());
-    }else Net.showLobby();
-  }
   window.Net=Net;
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Net.active){if(Net.ws?.readyState===1)Net.raw({type:'sync'});else Net.connect();}});
+  window.addEventListener('online',()=>{if(Net.active&&!Net.ready)Net.connect();});
+  Net.init(new URLSearchParams(location.search));
 })();
