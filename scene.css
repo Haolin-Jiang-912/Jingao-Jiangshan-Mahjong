@@ -1,0 +1,222 @@
+/* Campus scene and a table-first layout. Card faces/rules live in style.css. */
+.cover-page{background:#64a4e4}
+.cover-wrap{min-height:100svh;display:grid;grid-template-columns:minmax(0,1fr) 390px;align-items:center;gap:6vw;padding:38px max(5vw,24px);background:url('campus-cover-v24.webp') center 64%/cover no-repeat fixed,var(--campus-preview) center 64%/cover no-repeat fixed;isolation:isolate;overflow:hidden}
+.cover-wrap::after{display:none}
+.lobby-brand{position:relative;z-index:3;align-self:start;margin-top:clamp(36px,10vh,110px);text-align:left;color:#fff4c7;text-shadow:0 2px 0 #27496e}
+.lobby-brand .tiny{font-size:10px;letter-spacing:2px;color:#e8f8ff}
+.lobby-brand h1{font-family:'ZCOOL KuaiLe',sans-serif;font-size:clamp(46px,5.4vw,82px);line-height:1.2;letter-spacing:2px;margin:18px 0 12px;color:#fff1ad;text-shadow:4px 5px 0 #8a442c,0 2px 12px #15344b60}
+.lobby-brand .tagline{font-size:20px;margin:0 0 8px;color:#fff9de}
+.lobby-brand .lobby-sub{font-size:12px;color:#eef8ff;margin:0}
+.cover-card{width:100%;padding:24px;background:rgba(15,43,72,.62);border:1px solid #f6dc8cbb;outline:none;border-radius:10px;box-shadow:0 12px 36px #06203930;backdrop-filter:blur(3px);text-align:left;z-index:4}
+.entry-tabs{margin:0 0 19px;gap:0;border-color:#cce3ed66}
+.entry-tabs button{min-height:44px;padding:10px 8px;color:#e2eff5;font-size:14px}
+.entry-tabs button[aria-selected=true]{color:#ffe8a5}
+.mode-select{gap:8px;margin-bottom:20px}.mode-select legend{color:#e6f0f7}
+.mode-select label{background:#173a57a8;border-color:#c2dae380;border-radius:5px;padding:11px 8px}
+.mode-select label:has(input:checked){background:#f6d07220;border-color:#f6d072}
+.mode-select span{font-size:13px}.mode-select small{font-size:10px;line-height:1.4;color:#e0eaf1;margin-top:5px}
+.field-label{color:#e5eef4}.lobby-input{background:#15334ad1;border:1px solid #a2bdcd99;border-radius:5px;padding:12px;color:#fffbea;min-height:44px}
+.cover-card .lobby-primary{border-radius:5px;padding:13px 10px;margin-top:12px;box-shadow:0 3px 0 #6a4b23;font-size:14px}
+.join-divider{color:#dfedf4;margin:20px 0 8px}.join-row{gap:8px}.join-row .start-btn{box-shadow:0 3px #244867;border-radius:5px;min-width:66px;font-size:13px}
+.lobby-help{color:#e4edf2;line-height:1.5;text-align:center;font-size:11px;margin:14px 0 0}
+.solo-description{color:#f0f5f8;font-size:14px;line-height:1.9;margin:18px 0}
+.lobby-rules{border-color:#d1e2eb66;padding-top:14px;margin-top:18px;color:#e7eff3;font-size:11px}
+.credit{text-align:center;font-size:8px;letter-spacing:.2px;line-height:1.7;color:#e3f0f6;margin:18px 0 0}
+.campus-clouds{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none}
+.pixel-cloud{position:absolute;height:auto;object-fit:contain;image-rendering:pixelated;animation:campusDrift 65s linear infinite;will-change:transform;opacity:.94}
+.cloud-one{width:240px;top:5%;left:0;animation-duration:54s;animation-delay:-12s}
+.cloud-two{width:180px;top:17%;left:40%;animation-duration:72s;animation-delay:-25s;opacity:.8}
+.cloud-three{width:130px;top:30%;left:0;animation-duration:88s;animation-delay:-52s;opacity:.65}
+@keyframes campusDrift{from{transform:translateX(-35vw)}to{transform:translateX(110vw)}}
+
+body.game-page{--hand-space:104px;--desk-tilt:26deg;background:#284c62;color:#e9f1f6}
+body.game-page .scanlines{opacity:.016}
+body.game-page .pixel-header{height:44px;min-height:44px;padding:0 max(14px,env(safe-area-inset-left)) 0 max(14px,env(safe-area-inset-right));gap:12px;background:#14364be8;border-bottom:1px solid #d4be79a3}
+body.game-page .pixel-header b{font-size:18px;color:#ffe9ad}
+body.game-page .pixel-header a{font-size:12px;color:#d6e9f2}
+body.game-page .pixel-header button{min-height:34px;padding:6px 12px;background:#f4ebd9;color:#274558;border:1px solid #b8c2bf;border-radius:5px;font-size:12px;box-shadow:none}
+body.game-page #netStatus{font-size:10px;color:#bedbcf;max-width:140px}
+body.game-page .classroom{background:url('campus-cover-v24.webp') center 64%/cover no-repeat,var(--campus-preview) center 64%/cover no-repeat;isolation:isolate}
+body.game-page .classroom::after{display:block!important;content:'';position:absolute;inset:0;z-index:0;opacity:1;background:#24465769;backdrop-filter:blur(2px);pointer-events:none}
+body.game-page .desk-table{display:block;grid-template-columns:none;grid-template-rows:none;position:relative!important;overflow:hidden;width:100%!important;height:100%!important;margin:0!important;min-height:0!important;isolation:isolate}
+.table-stage{position:absolute;inset:0;display:block;padding:0;container-type:size;z-index:2}
+.play-surface{position:absolute;inset:0;width:100%;height:100%;max-width:none;aspect-ratio:auto;isolation:isolate}
+body.game-page .joined-desks{position:absolute;inset:auto;left:50%;top:47%;width:min(1200px,calc(100% - 130px));height:auto;aspect-ratio:3/2;border-radius:10px;transform:translate(-50%,-50%) perspective(2400px) rotateX(var(--desk-tilt));transform-origin:center;background:url('school-desks-v24.webp') center/100% 100% no-repeat,var(--desk-preview) center/100% 100% no-repeat;box-shadow:0 10px 0 #203a4b44;z-index:0}
+body.game-page .opp{z-index:12;max-width:90px;gap:3px}
+body.game-page .opp .avatar{width:43px;height:50px;clip-path:none;border:2px solid #d8dfd5;border-radius:7px;box-shadow:0 2px 6px #14354b50;object-fit:cover}
+body.game-page .opp.active .avatar{outline:2px solid #f1c954;outline-offset:2px}
+body.game-page .oscore,body.game-page .my-score{max-width:112px;padding:4px 7px;border:1px solid #afc3ce80;background:#18394bdc;color:#f2f6ed;box-shadow:none;border-radius:5px;font-size:11px;font-weight:600;text-shadow:none}
+body.game-page .oscore.on,body.game-page .my-score.on{background:#745c25;border-color:#f0ce73;color:#fff2b8}
+.dealer-flag{display:inline-block;margin-left:5px;color:#ffe092;font-size:10px}
+body.game-page .o-top{left:66%;top:6px;max-width:40%;transform:translateX(-50%)}
+body.game-page .o-top .opp-main{gap:6px;align-items:center}
+body.game-page .o-top .avatar{width:30px;height:35px}
+body.game-page .o-top .side{gap:1px}
+body.game-page .o-top .backs{max-width:none;width:max-content;flex-wrap:nowrap}
+body.game-page .o-top .omelds{width:max-content;max-width:none;flex-wrap:nowrap;margin:0}
+body.game-page .o-left{left:max(12px,env(safe-area-inset-left));top:40%;transform:translateY(-50%)}
+body.game-page .o-right{right:max(12px,env(safe-area-inset-right));top:40%;transform:translateY(-50%)}
+body.game-page .o-left .backs,body.game-page .o-right .backs{position:absolute;top:50%;width:max-content;max-width:none;display:flex;flex-wrap:nowrap;transform-origin:center}
+body.game-page .o-left .backs{left:calc(100% - 42px);transform:translateY(-50%) rotate(90deg)}
+body.game-page .o-right .backs{right:calc(100% - 42px);transform:translateY(-50%) rotate(-90deg)}
+body.game-page .backs{gap:1px;line-height:0}
+body.game-page .tile.back{width:10px;height:16px;flex:0 0 10px;background:#295676;border:1px solid #123348;border-top:2px solid #78a9bb;border-radius:2px;box-shadow:0 1px #102a3d}
+body.game-page .oflowers{color:#f5edca;font-size:10px;text-shadow:0 1px 2px #163547}
+body.game-page .omelds{max-width:85px;gap:3px}
+body.game-page .omelds .mtile{width:18px;height:26px;--face-scale:.78}
+body.game-page .center-board{--river-divisor:6;--river-h:clamp(11px,calc((100cqh - var(--hand-space) - 82px) / var(--river-divisor)),30px);--river-w:calc(var(--river-h) * .72);position:absolute;inset:54px 23% var(--hand-space);height:auto;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:24px 72px;background:none;border:0;box-shadow:none;overflow:visible;z-index:7}
+body.game-page .dz{position:relative;inset:auto;transform:none;width:auto;min-width:0;min-height:0;max-height:none;display:grid;grid-template-columns:repeat(6,var(--river-w));grid-auto-rows:var(--river-h);align-content:start;gap:1px;padding:0;margin:0;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible;cursor:zoom-in}
+body.game-page .dz:empty{pointer-events:none}
+body.game-page .dz-t{grid-area:1/2;justify-content:start}
+body.game-page .dz-r{grid-area:2/2;justify-content:start}
+body.game-page .dz-b{grid-area:2/1;justify-content:end}
+body.game-page .dz-l{grid-area:1/1;justify-content:end}
+body.game-page .center-board .dtile{width:var(--river-w);height:var(--river-h);--face-scale:.83;border:1px solid #99764c;border-radius:2px;box-shadow:0 1px #715437}
+.turn-hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:66px;height:66px;border:1px solid #b6cad0a3;border-radius:12px;background:#244e60ed;box-shadow:0 2px 5px #1233453b;display:grid;grid-template:18px 1fr 18px/18px 1fr 18px;align-items:center;justify-items:center;color:#dce8ec;z-index:8}
+.seat-wind{font-size:11px;line-height:1;color:#c4d5db}.seat-wind.on{color:#ffdf82;font-weight:700}
+.wind-top{grid-area:1/2}.wind-right{grid-area:2/3}.wind-bottom{grid-area:3/2}.wind-left{grid-area:2/1}
+.turn-hub #wallCount{grid-area:2/2;font-size:9px;white-space:nowrap;color:#fff3bc;letter-spacing:-.3px}
+body.game-page .turn-hub #turnLabel{position:absolute;top:calc(100% + 3px);bottom:auto;left:50%;transform:translateX(-50%);margin:0;max-width:110px;background:#173f51eb;border:0;border-radius:3px;color:#fff4cd;padding:3px 5px;font-size:10px;line-height:1.3;white-space:nowrap}
+body.game-page .table-meta{top:8px;left:max(12px,env(safe-area-inset-left));right:auto;transform:none;max-width:none;width:auto;z-index:15}
+body.game-page .game-info{display:flex;flex-wrap:nowrap;align-items:center;gap:12px;width:auto;max-width:none;background:#173e51d9;border:1px solid #c1d2cd80;border-radius:6px;color:#f3f2dc;padding:5px 8px}
+body.game-page .wealth-box{gap:5px}.wealth-box small{white-space:nowrap}
+body.game-page .wealth-box small{font-size:10px;color:#ecf0e3}
+body.game-page .wealth-box .mtile{width:25px;height:35px;--face-scale:1.05}
+body.game-page .dice-box{gap:6px;min-height:36px;color:#f3f0d9;padding:0}
+.dice-summary small{color:#c4d8df;font-size:9px}.dice-summary strong{font-size:10px;font-weight:600}
+body.game-page .dice-box .die-face{width:24px;height:24px;padding:3px;gap:1px}.dice-box .pip{width:4px;height:4px}.dice-box .die-one .pip{width:5px;height:5px}
+body.game-page .hand-area{position:absolute;left:0;bottom:0;transform:none;display:grid;grid-template-columns:minmax(0,1fr) 126px;grid-template-rows:auto;align-items:end;gap:0 12px;padding:0 max(16px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:none;border:0;box-shadow:none;z-index:20;pointer-events:none}
+.hand-status{position:absolute;left:clamp(16px,10vw,100px);right:clamp(16px,10vw,100px);bottom:calc(100% + 1px);width:auto;max-width:none;min-height:27px;display:flex;gap:8px;align-items:center;overflow:visible;pointer-events:none}
+body.game-page .my-score{max-width:140px;position:static;flex:0 0 auto;padding:4px 8px;font-size:11px;pointer-events:auto}
+body.game-page .hand-area #statusText{width:fit-content;max-width:55%;color:#f5f2dd;background:#163c4dcc;font-size:11px;line-height:1.4;padding:4px 7px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:none;margin:0;pointer-events:none}
+#hintBtn{margin-left:auto;min-height:30px;padding:5px 10px;font-size:11px;color:#f1f3e1;border:1px solid #c5d7d07d;border-radius:5px;background:#214858dc;box-shadow:none;pointer-events:auto;white-space:nowrap}
+body.game-page .hand-row{grid-column:1;grid-row:1;justify-content:center;min-width:0;gap:5px;width:100%;pointer-events:none}
+body.game-page .hand-col{flex:0 1 auto;min-width:0;max-width:100%;gap:2px;width:auto}
+body.game-page .hand{display:flex;flex-wrap:nowrap;justify-content:center;width:auto;max-width:100%;padding:12px 3px 3px;gap:2px;min-height:0;overflow-x:auto;overflow-y:hidden;pointer-events:auto;scrollbar-width:thin;scrollbar-color:#8bb3c2 transparent}
+body.game-page .hand .tile{width:46px;height:66px;min-width:0;flex:0 0 46px;border:1px solid #9a855e;border-bottom-width:4px;border-radius:4px;background:#fffdf0;box-shadow:0 2px 0 #5f593f;transform:none;transition:transform 120ms ease-out,box-shadow 120ms ease-out}
+body.game-page .hand .tile.selected{transform:translateY(-10px);border-color:#e9bd4e;box-shadow:0 2px #a1762c,0 0 0 2px #f4cc66;background:#fff8dc}
+body.game-page .melds-row{width:100%;max-width:100%;min-height:0;justify-content:flex-start;gap:5px;padding:0;overflow-x:auto;pointer-events:auto}
+body.game-page .meld{background:#173b4a9c;border-color:#d0d6ba99;border-radius:3px;padding:2px;box-shadow:0 2px #15374a30}
+body.game-page .melds-row .mtile{width:24px;height:34px;--face-scale:1.05}
+body.game-page .flower-rack{max-width:45px;min-width:27px;flex:0 0 auto;border:0;padding:0 0 0 4px;background:none;color:#fff1bd;align-self:center;pointer-events:auto}
+body.game-page .flower-rack small{color:#fff0ba;font-size:10px;text-shadow:0 1px 2px #16344a}
+body.game-page .flower-rack #flowerTiles{display:none}body.game-page .flower-rack>small:first-child{display:none}
+body.game-page .hand-controls{grid-column:2;grid-row:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;min-width:0;max-width:none;width:100%;margin:0 0 4px;gap:0;pointer-events:auto}
+body.game-page .hand-controls #tileHint{position:absolute;width:1px;height:1px;min-height:0;overflow:hidden;clip-path:inset(50%);margin:0;padding:0}
+body.game-page .hand-controls #discardBtn{min-width:0;min-height:50px;width:100%;padding:9px;font-size:14px;border:1px solid #c7a34b;border-bottom:3px solid #9e7b32;border-radius:7px;color:#493c24;background:#f8d982;box-shadow:0 3px 6px #18354433;font-weight:700}
+body.game-page .hand-controls #discardBtn:disabled{background:#d8dfd5;border-color:#a5b7ba;color:#5d7278;opacity:.85;box-shadow:none}
+body.game-page .hint-bar{top:auto;bottom:calc(var(--hand-space) + 15px);left:50%;transform:translateX(-50%);min-width:0;max-width:90%;gap:8px;z-index:28}
+body.game-page .hint-bar button{min-height:44px;background:#f8e2a0;border:1px solid #b28c41;border-radius:6px;box-shadow:0 3px #8d6c36;color:#514028;font-size:14px;padding:8px 15px}
+.discards-dialog{width:min(460px,94vw)}.discards-dialog h2{font-size:21px;line-height:1.4;margin:0 0 14px}.discards-detail{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:10px 0 18px}.discards-detail .dtile{width:100%;height:57px;--face-scale:1.5;border-radius:4px;border-width:2px}.discards-dialog .empty-discard{color:#d2e2e7;font-size:14px}
+.discards-dialog .dialog-dismiss{position:absolute;right:0;top:0;width:44px;height:44px;margin:0;padding:0;background:none;color:#f8e6ad;font-size:26px;line-height:1}
+/* River faces follow the available row height, including very short screens. */
+body.game-page .center-board .dtile .wan .num{font-size:calc(var(--river-h) * .35)}
+body.game-page .center-board .dtile .wan .suit{font-size:calc(var(--river-h) * .31)}
+body.game-page .center-board .dtile .tiao:not(.bird){grid-template-columns:repeat(3,calc(var(--river-h) * .09));gap:calc(var(--river-h) * .04)}
+body.game-page .center-board .dtile .tiao i{height:calc(var(--river-h) * .2);width:calc(var(--river-h) * .09);box-shadow:0 calc(var(--river-h) * .04) #e1c341}
+body.game-page .center-board .dtile .tong{grid-template-columns:repeat(3,calc(var(--river-h) * .12));gap:calc(var(--river-h) * .04)}
+body.game-page .center-board .dtile .tong i{width:calc(var(--river-h) * .12);height:calc(var(--river-h) * .12);border-width:1px}
+body.game-page .center-board .dtile :is(.feng,.zhong,.fa){font-size:calc(var(--river-h) * .58)}
+body.game-page .center-board .dtile .bai{width:calc(var(--river-h) * .41);height:calc(var(--river-h) * .68)}
+body.game-page .center-board .dtile .bai i{width:calc(var(--river-h) * .26);height:calc(var(--river-h) * .45)}
+@media(hover:hover) and (pointer:fine){body.game-page .hand .tile:hover{transform:translateY(-4px)}body.game-page .hand .tile.selected:hover{transform:translateY(-10px)}body.game-page .dz:hover{filter:brightness(1.06)}}
+
+@media(orientation:landscape) and (max-height:600px){
+ .cover-wrap{grid-template-columns:minmax(0,1fr) minmax(320px,380px);gap:26px;padding:14px 24px;min-height:100svh;background-position:center 67%}
+ .lobby-brand{margin-top:12px}.lobby-brand h1{font-size:clamp(34px,5vw,58px);letter-spacing:1px;margin:12px 0}.lobby-brand .tagline{font-size:15px}.lobby-brand .lobby-sub{font-size:10px}.lobby-brand .tiny{font-size:8px}
+ .cover-card{max-height:calc(100dvh - 28px);overflow-y:auto;padding:17px 20px;scrollbar-width:thin;overscroll-behavior:contain}.entry-tabs{margin-bottom:14px}.entry-tabs button{padding:6px 8px;min-height:36px}.mode-select{margin-bottom:14px}.credit{margin-top:14px}.lobby-rules{margin-top:14px}
+ body.game-page{--desk-tilt:60deg;--hand-space:83px}
+ body.game-page .pixel-header{height:36px;min-height:36px;gap:9px;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
+ body.game-page .pixel-header b{font-size:15px}body.game-page #handNo{font-size:10px}body.game-page .pixel-header a{font-size:11px}body.game-page .pixel-header button{min-height:29px;padding:4px 11px;font-size:11px}
+ body.game-page .joined-desks{width:calc(100% - 124px);top:48%;transform:translate(-50%,-50%) perspective(2400px) rotateX(var(--desk-tilt))}
+ body.game-page .o-top{top:4px;left:67%;max-width:42%;gap:2px}body.game-page .o-top .avatar{width:23px;height:27px}
+ body.game-page .o-top .omelds{position:absolute;left:calc(100% + 8px);top:0;max-width:22vw;flex-wrap:wrap}
+ body.game-page .oscore{font-size:10px;padding:3px 5px;max-width:90px}body.game-page .opp .avatar{width:33px;height:39px}
+ body.game-page .o-left,body.game-page .o-right{top:44%;max-width:74px}body.game-page .o-left{left:max(8px,env(safe-area-inset-left))}body.game-page .o-right{right:max(8px,env(safe-area-inset-right))}
+ body.game-page .tile.back{width:8px;height:13px;flex-basis:8px}body.game-page .omelds{max-width:72px}body.game-page .omelds .mtile{width:16px;height:23px;--face-scale:.68}
+ body.game-page .table-meta{top:5px;left:max(10px,env(safe-area-inset-left))}body.game-page .game-info{padding:4px 6px;gap:8px;border-radius:5px}
+ body.game-page .wealth-box .mtile{width:22px;height:31px;--face-scale:.95}body.game-page .wealth-box small{font-size:9px}
+ .dice-summary small{display:none}.dice-summary strong{font-size:9px}.dice-pair{gap:3px}body.game-page .dice-box{gap:5px;min-height:30px}
+ body.game-page .dice-box .die-face{width:22px;height:22px;padding:3px;gap:1px}body.game-page .dice-box .pip{width:3px;height:3px}body.game-page .dice-box .die-one .pip{width:5px;height:5px}
+ body.game-page .center-board{inset:48px 23% var(--hand-space);gap:24px 62px;--river-h:clamp(11px,calc((100cqh - var(--hand-space) - 78px) / var(--river-divisor)),26px)}
+ body.game-page .center-board .dtile{--face-scale:.7}
+ .turn-hub{width:55px;height:55px;grid-template:15px 1fr 15px/15px 1fr 15px;border-radius:10px}.seat-wind{font-size:10px}.turn-hub #wallCount{font-size:8px}body.game-page .turn-hub #turnLabel{font-size:9px;padding:2px 4px}
+ body.game-page .hand-area{grid-template-columns:minmax(0,1fr) 106px;gap:0 10px;padding:0 max(12px,env(safe-area-inset-right)) max(7px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+ .hand-status{left:clamp(12px,10vw,100px);right:clamp(12px,10vw,100px);bottom:calc(100% - 2px);min-height:24px;gap:7px}
+ body.game-page .my-score{font-size:10px;padding:3px 6px}body.game-page .hand-area #statusText{font-size:10px;padding:3px 5px;max-width:60%}#hintBtn{font-size:10px;min-height:26px;padding:4px 8px}
+ body.game-page .hand .tile{width:clamp(27px,4.65vw,44px);height:clamp(43px,6.6vw,62px);flex-basis:clamp(27px,4.65vw,44px);border-bottom-width:3px}
+ body.game-page .hand .tile .wan .num{font-size:22px}body.game-page .hand .tile .wan .suit{font-size:20px}body.game-page .hand .tile :is(.feng,.zhong,.fa){font-size:27px;line-height:1}
+ body.game-page .hand .tile .tong{grid-template-columns:repeat(3,7px);gap:2px}body.game-page .hand .tile .tong i{width:7px;height:7px;border-width:1px}body.game-page .hand .tile .tiao{grid-template-columns:repeat(3,4px);gap:2px}body.game-page .hand .tile .tiao i{width:4px;height:14px}
+ body.game-page .hand-controls{margin-bottom:3px}body.game-page .hand-controls #discardBtn{font-size:13px;min-height:46px;padding:7px}
+ body.game-page .flower-rack{min-width:24px;padding-left:2px}body.game-page .flower-rack small{font-size:9px}body.game-page .melds-row .mtile{width:22px;height:31px;--face-scale:1}
+ body.game-page .hint-bar{bottom:calc(var(--hand-space) + 22px);gap:6px}body.game-page .hint-bar button{min-height:40px;padding:7px 12px;font-size:12px}
+}
+@media(orientation:landscape) and (max-width:740px){
+ .cover-wrap{grid-template-columns:minmax(0,1fr) 310px;gap:16px;padding:10px 16px}.cover-card{padding:14px 16px;max-height:calc(100dvh - 20px)}.lobby-brand h1{font-size:35px}.lobby-brand .tiny{font-size:7px;letter-spacing:1px}.lobby-brand .tagline{font-size:13px}
+ body.game-page .joined-desks{width:calc(100% - 100px)}body.game-page .center-board{inset:48px 22% var(--hand-space);gap:22px 54px;--river-h:clamp(11px,calc((100cqh - var(--hand-space) - 76px) / var(--river-divisor)),24px)}
+ body.game-page .o-top{left:67%}body.game-page .table-meta .game-info{gap:5px;padding:3px 5px}body.game-page .wealth-box .mtile{width:19px;height:28px;--face-scale:.83}body.game-page .wealth-box{gap:3px}body.game-page .wealth-box small{font-size:8px}
+ body.game-page .dice-box .die-face{width:19px;height:19px;padding:2px}body.game-page .dice-summary strong{font-size:8px}
+ body.game-page .hand-area{grid-template-columns:minmax(0,1fr) 86px;gap:0 7px;padding-right:9px;padding-left:9px}body.game-page .hand .tile{width:clamp(27px,4.5vw,32px);flex-basis:clamp(27px,4.5vw,32px);height:46px}
+ body.game-page .hand .tile .wan .num{font-size:18px}body.game-page .hand .tile .wan .suit{font-size:16px}body.game-page .hand .tile :is(.feng,.zhong,.fa){font-size:22px}body.game-page .hand .tile .tong{grid-template-columns:repeat(3,5px);gap:2px}body.game-page .hand .tile .tong i{width:5px;height:5px}
+ body.game-page .hand .tile .bai{width:18px;height:27px;border-width:2px}body.game-page .hand .tile .bai i{width:10px;height:18px;border-width:1px}body.game-page .hand-controls #discardBtn{font-size:12px;min-height:44px}
+}
+@media(orientation:portrait) and (max-width:700px){
+ .cover-wrap{display:flex;flex-direction:column;justify-content:center;gap:24px;padding:24px 18px;min-height:100svh;overflow:auto;background-position:47% center;background-attachment:fixed}
+ .lobby-brand{align-self:center;margin:0;text-align:center}.lobby-brand h1{font-size:44px;letter-spacing:1px;margin:12px 0}.lobby-brand .tiny{font-size:8px}.lobby-brand .tagline{font-size:16px}.lobby-brand .lobby-sub{font-size:10px}
+ .cover-card{width:min(390px,100%);padding:20px;background:#102d4d99}.cloud-one{width:190px;top:3%}.cloud-two{width:140px;top:18%}.cloud-three{width:100px;top:36%}
+ body.game-page{--desk-tilt:12deg;--hand-space:112px}body.game-page .pixel-header{height:42px;min-height:42px;gap:6px;padding:0 9px}body.game-page .pixel-header b{font-size:15px}body.game-page .pixel-header button{padding:5px 8px;font-size:11px;min-height:31px}body.game-page #handNo{font-size:10px}
+ body.game-page .joined-desks{width:calc(100% - 28px);top:45%;transform:translate(-50%,-50%) perspective(2200px) rotateX(var(--desk-tilt));border-radius:7px}
+ body.game-page .table-meta{top:6px;left:50%;transform:translateX(-50%);width:max-content;max-width:96%}body.game-page .game-info{gap:9px;padding:4px 7px}
+ body.game-page .o-top{left:58%;top:65px;max-width:65%}.o-top .opp-main{gap:4px}body.game-page .o-top .avatar{width:26px;height:31px}
+ body.game-page .o-left{left:6px;top:40%}body.game-page .o-right{right:6px;top:40%}body.game-page .opp .avatar{width:30px;height:36px}body.game-page .oscore{font-size:9px;padding:3px 5px;max-width:70px}
+ body.game-page .tile.back{width:6px;height:10px;flex-basis:6px}body.game-page .o-left .backs{left:calc(100% - 26px)}body.game-page .o-right .backs{right:calc(100% - 26px)}body.game-page .oflowers{font-size:9px}
+ body.game-page .omelds{max-width:56px}body.game-page .omelds .mtile{width:13px;height:19px;--face-scale:.53}
+ body.game-page .center-board{inset:30% 21% calc(var(--hand-space) + 65px);gap:26px 48px;--river-h:clamp(15px,calc((100cqh - var(--hand-space) - 260px) / var(--river-divisor)),24px)}
+ body.game-page .center-board .dtile{--face-scale:.64}.turn-hub{width:46px;height:55px;grid-template:15px 1fr 15px/12px 1fr 12px;border-radius:8px}.turn-hub #wallCount{font-size:7px}.seat-wind{font-size:9px}body.game-page .turn-hub #turnLabel{font-size:9px}
+ body.game-page .hand-area{display:grid;grid-template-columns:minmax(0,1fr) 86px;gap:0 7px;padding:0 8px max(10px,env(safe-area-inset-bottom));background:none}
+ .hand-status{left:8px;right:8px;gap:5px;bottom:calc(100% + 1px);min-height:26px}body.game-page .my-score{font-size:9px;max-width:86px;padding:3px 5px}body.game-page .hand-area #statusText{font-size:9px;max-width:49%;padding:3px 4px}#hintBtn{font-size:9px;padding:4px 6px;min-height:26px}
+ body.game-page .hand-row{width:100%;min-width:0;gap:3px}body.game-page .hand-col{flex:1;max-width:calc(100% - 24px);width:auto}body.game-page .hand{width:100%;justify-content:flex-start;gap:3px;padding-top:12px;padding-bottom:6px}
+ body.game-page .hand .tile{width:40px;min-width:40px;height:58px;flex:0 0 40px}.hand .tile .wan .num{font-size:21px}.hand .tile .wan .suit{font-size:19px}
+ body.game-page .hand-controls{display:flex;grid-column:2;grid-row:1;max-width:none;margin-bottom:6px}body.game-page .hand-controls #discardBtn{min-height:48px;font-size:12px;padding:6px}
+ body.game-page .flower-rack{min-width:20px;max-width:20px;padding-left:2px}body.game-page .flower-rack small{font-size:9px}body.game-page .melds-row .mtile{width:19px;height:28px;--face-scale:.85}
+ body.game-page .hint-bar{bottom:calc(var(--hand-space) + 24px);max-width:96%;gap:5px}body.game-page .hint-bar button{font-size:12px;min-height:42px;padding:7px 11px}
+ .discards-detail{gap:4px}.discards-detail .dtile{height:50px;--face-scale:1.35}
+}
+@media(prefers-reduced-motion:reduce){.pixel-cloud{animation:none!important;will-change:auto}.cloud-one{left:8%}.cloud-two{left:68%}.cloud-three{left:35%}body.game-page .hand .tile{transition:none}}
+/* Four discard rivers face their owners, like a physical Mahjong table. */
+.round-summary{display:flex;align-items:center;gap:10px;font-size:11px;color:#bed3dc;white-space:nowrap}
+body.game-page .round-summary #turnLabel{font:inherit;font-weight:600;color:#f4e3ab;margin:0}
+body.game-page .center-board{--river-rows:3;--river-h:24px;--hub-w:96px;--hub-h:64px;--river-span:calc(var(--river-h) * 4.32 + 5px);--river-depth:calc(var(--river-h) * var(--river-rows) + (var(--river-rows) - 1) * 1px);--river-offset:calc(max(var(--river-span),var(--hub-w)) * .5 + var(--river-depth) * .5 + 8px);inset:72px 18% calc(var(--hand-space) + 24px);display:block;gap:0}
+body.game-page .dz{position:absolute;inset:auto;width:var(--river-span);height:var(--river-depth);padding:0;align-content:start;justify-content:start;grid-template-rows:repeat(var(--river-rows),var(--river-h));grid-auto-rows:var(--river-h);gap:1px;min-height:0;max-height:none;overflow:visible;transform-origin:center}
+body.game-page .dz::before{display:none}
+body.game-page .dz-t{left:50%;top:0;transform:translateX(-50%) rotate(180deg)}
+body.game-page .dz-b{left:50%;bottom:0;transform:translateX(-50%)}
+body.game-page .dz-l{left:calc(50% - var(--river-offset));top:50%;transform:translate(-50%,-50%) rotate(90deg)}
+body.game-page .dz-r{left:calc(50% + var(--river-offset));top:50%;transform:translate(-50%,-50%) rotate(-90deg)}
+body.game-page .center-board .last-discard{outline:2px solid #daa22a;outline-offset:0;position:relative;z-index:1}
+.table-hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:var(--hub-w);height:var(--hub-h);background:#1b4656ed;border:1px solid #89a9ac;border-radius:7px;color:#c2d1ce;display:grid;grid-template:12px minmax(0,1fr) 12px/15px minmax(0,1fr) 15px;align-items:center;justify-items:center;z-index:8;pointer-events:none}
+.hub-wind{font:11px/1 'Microsoft YaHei',sans-serif}.hub-wind.on{color:#ffe09a;font-weight:700}.hub-top{grid-area:1/2}.hub-right{grid-area:2/3}.hub-bottom{grid-area:3/2}.hub-left{grid-area:2/1}.hub-count{grid-area:2/2;display:flex;align-items:center;justify-content:center;gap:3px;color:#eff4d8;white-space:nowrap}.hub-count strong{font:700 clamp(13px,calc(var(--hub-h) * .34),24px)/1 'Microsoft YaHei',sans-serif}.hub-count small{font:8px/1.2 'Microsoft YaHei',sans-serif;writing-mode:vertical-rl;color:#c1d2cc}
+body.game-page .meld{background:none;border:0;padding:0;box-shadow:none;border-radius:0}
+body.game-page .meld{display:flex;align-items:center;gap:2px}
+.meld-tiles{display:flex;gap:1px}
+.meld-label{font:9px/1.2 'Microsoft YaHei',sans-serif;color:#294d59;writing-mode:vertical-rl;flex:0 0 auto}
+body.game-page .meld .back{background:#295676;border:1px solid #123348;border-top:2px solid #78a9bb;box-shadow:0 1px #102a3d}
+body.game-page .hand-col{flex-direction:row;align-items:flex-end;gap:12px}
+body.game-page .melds-row{flex:0 1 auto;align-self:flex-end;width:auto;max-width:100%;gap:8px;padding-bottom:5px}
+body.game-page .melds-row:empty{display:none}
+@media(orientation:landscape) and (max-height:600px){
+ .round-summary{gap:8px;font-size:10px}
+ body.game-page .center-board{inset:clamp(62px,16vh,90px) 17% calc(var(--hand-space) + 24px)}
+ body.game-page .hand-col{gap:10px}body.game-page .melds-row{gap:6px;padding-bottom:4px}
+}
+@media(orientation:landscape) and (max-width:740px){
+ body.game-page .center-board{left:16%;right:16%}
+ .round-summary{font-size:9px;gap:6px}body.game-page #netStatus{max-width:65px}
+ body.game-page .melds-row .mtile{width:19px;height:28px;--face-scale:.85}
+}
+@media(orientation:landscape) and (max-height:350px){body.game-page .center-board{top:44px}.hub-wind{font-size:9px}.table-hub{grid-template:10px minmax(0,1fr) 10px/11px minmax(0,1fr) 11px;border-radius:5px}.hub-count small{font-size:7px}}
+@media(orientation:portrait) and (max-width:700px){
+ .round-summary{font-size:9px}.round-summary #turnLabel{display:none}body.game-page .pixel-header #handNo{display:none}
+ body.game-page .center-board{inset:calc(45% - 105px) 16% auto;height:210px}
+ body.game-page .hand-col{flex-direction:column;gap:2px}body.game-page .melds-row{width:100%;align-self:flex-start;gap:4px;padding-bottom:0}
+}

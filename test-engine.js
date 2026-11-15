@@ -1,0 +1,12 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const ctx=vm.createContext({});vm.runInContext(fs.readFileSync('engine.js','utf8'),ctx);
+const run=code=>vm.runInContext(code,ctx);
+assert.equal(run("canWinStruct(['8万','9万','白','1条','2条','3条','4条','5条','6条','2筒','3筒','4筒','东','东'],'白',4)"),true,'wildcard completes 789');
+assert.equal(run("canWinStruct(['8万','白','白','1条','2条','3条','4条','5条','6条','2筒','3筒','4筒','东','东'],'白',4)"),true,'two wildcards complete 678');
+assert.equal(run("canWinStruct(['1万','2万','3万','4万','5万','6万','1筒','2筒','3筒','东','东','东','南','南'],'白',4)"),true);
+assert.equal(run("canWinStruct(['1万','2万','4万','5万','6万','8万','1筒','2筒','4筒','东','东','东','南','南'],'白',4)"),false);
+assert.equal(run("scoreWin({concealed:['东','东','东','南','南','南','中','中','中','发','发'],melds:[['1万','2万','3万']],wealth:'白',winTile:'发',flowers:0}).type"),'平胡','an exposed sequence prevents all-triplets scoring');
+assert.equal(run("scoreWin({concealed:['东','东','东','南','南','南','中','中','中','发','发'],melds:[['1万','1万','1万']],wealth:'白',winTile:'发',flowers:0}).type"),'碰碰胡');
+assert.equal(run("nextTile('9万')"),'1万');assert.equal(run("nextTile('白')"),'东');
+assert.equal(run('makeDeck().length'),144);
+console.log('ENGINE_OK: wildcard edge sequences, scoring and deck rules');

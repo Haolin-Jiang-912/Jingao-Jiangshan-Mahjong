@@ -1,144 +1,40 @@
-/* 鸡歪麻将厅 · Cloudflare Workers / PartyKit 兼容版联机服务器
- * 使用 Cloudflare Durable Object 做房间管理，消息转发逻辑与 server.js 一致。
- * 部署：wrangler deploy，需配置 Durable Object 绑定名 MAHJONG_ROOMS。
- */
-
-const HEARTBEAT_MS = 30000;
-
+import {RoomController} from './room-controller.mjs';
 export class MahjongRoom {
-  constructor(state, env) {
-    this.state = state;
-    this.env = env;
-    this.sessions = new Map(); // ws -> {pid,name,role}
-    this.host = null;
-    this.mode = 'p8';
-  }
-
-  roomNames() {
-    const names = [this.host && this.sessions.get(this.host) ? this.sessions.get(this.host).name : '房主', null, null, null];
-    this.sessions.forEach((meta, ws) => {
-      if (ws !== this.host && meta.pid >= 1 && meta.pid <= 3) names[meta.pid] = meta.name;
-    });
-    return names;
-  }
-
-  broadcast(msg, exclude = null) {
-    const s = JSON.stringify(msg);
-    this.sessions.forEach((meta, ws) => {
-      if (ws !== exclude && ws.readyState === WebSocket.OPEN) {
-        try { ws.send(s); } catch (e) { }
-      }
+  constructor(ctx,env){
+    this.ctx=ctx;
+    ctx.blockConcurrencyWhile(async()=>{
+      const saved=await ctx.storage.get('room-v2');
+      this.room=new RoomController({sockets:()=>ctx.getWebSockets(),save:data=>ctx.storage.put('room-v2',data),schedule:time=>time?ctx.storage.setAlarm(time):ctx.storage.deleteAlarm(),clear:()=>ctx.storage.deleteAll()},saved);
     });
   }
-
-  send(ws, msg) {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      try { ws.send(JSON.stringify(msg)); } catch (e) { }
-    }
+  async fetch(request){
+    const pair=new WebSocketPair();this.ctx.acceptWebSocket(pair[1]);
+    await this.room.join(pair[1],new URL(request.url).searchParams);
+    return new Response(null,{status:101,webSocket:pair[0]});
   }
-
-  async fetch(request) {
-    const url = new URL(request.url);
-    const roomId = (url.searchParams.get('room') || '').trim().toUpperCase();
-    const role = url.searchParams.get('role') || url.searchParams.get('net');
-    const name = decodeURIComponent(url.searchParams.get('name') || '玩家').slice(0, 8) || '玩家';
-    const mode = url.searchParams.get('mode') === 'ju' ? 'ju' : 'p8';
-
-    if (!roomId) return new Response('Missing room', { status: 400 });
-    if (!role || (role !== 'host' && role !== 'client')) return new Response('Missing role=host|client', { status: 400 });
-
-    const pair = new WebSocketPair();
-    const [client, server] = [pair[0], pair[1]];
-    server.accept();
-
-    if (role === 'host') {
-      if (this.host && this.host.readyState === WebSocket.OPEN) {
-        this.send(server, { type: 'error', text: '房间 ' + roomId + ' 已存在房主' });
-        server.close();
-        return new Response(null, { status: 101, webSocket: client });
-      }
-      this.host = server;
-      this.mode = mode;
-      this.sessions.set(server, { pid: 0, name, role: 'host' });
-      this.send(server, { type: 'welcome', pid: 0, names: [name, null, null, null], mode });
-      this.broadcast({ type: 'lobby', count: 1, players: [name, null, null, null], max: 4, room: roomId });
-    } else {
-      if (!this.host || this.host.readyState !== WebSocket.OPEN) {
-        this.send(server, { type: 'error', text: '房间 ' + roomId + ' 不存在，请确认房主已创房' });
-        server.close();
-        return new Response(null, { status: 101, webSocket: client });
-      }
-      const used = new Set([0]);
-      this.sessions.forEach(m => used.add(m.pid));
-      let pid = 1; while (used.has(pid) && pid < 4) pid++;
-      if (pid > 3) {
-        this.send(server, { type: 'error', text: '房间已满' });
-        server.close();
-        return new Response(null, { status: 101, webSocket: client });
-      }
-      this.sessions.set(server, { pid, name, role: 'client' });
-      this.send(this.host, { type: 'join', pid, name });
-      const names = this.roomNames();
-      this.broadcast({ type: 'lobby', count: names.filter(Boolean).length, players: names, max: 4, room: roomId });
-      this.send(server, { type: 'welcome', pid, names, mode: this.mode });
-    }
-
-    server.addEventListener('message', event => {
-      let msg;
-      try { msg = JSON.parse(event.data); } catch (e) { return; }
-      const meta = this.sessions.get(server);
-      if (!meta) return;
-
-      if (meta.role === 'client') {
-        if (['action', 'claimResponse', 'rename', 'sync', 'ack'].includes(msg.type)) {
-          if (this.host && this.host.readyState === WebSocket.OPEN) {
-            this.send(this.host, Object.assign({}, msg, { fromPid: meta.pid }));
-          }
-          return;
-        }
-      }
-
-      if (meta.role === 'host') {
-        if (['state', 'turn', 'claimOffer', 'start', 'modal', 'notify', 'lobby', 'welcome', 'broadcast'].includes(msg.type)) {
-          this.broadcast(msg, server);
-          return;
-        }
-      }
-      this.broadcast(Object.assign({}, msg, { fromPid: meta.pid }), server);
-    });
-
-    server.addEventListener('close', () => {
-      const meta = this.sessions.get(server);
-      if (!meta) return;
-      this.sessions.delete(server);
-      if (meta.role === 'host') {
-        this.broadcast({ type: 'notify', text: '房主离开，房间已关闭' });
-        this.sessions.forEach((m, ws) => { try { ws.close(); } catch (e) { } });
-        this.sessions.clear();
-        this.host = null;
-      } else {
-        if (this.host && this.host.readyState === WebSocket.OPEN) {
-          this.send(this.host, { type: 'leave', pid: meta.pid });
-        }
-        const names = this.roomNames();
-        this.broadcast({ type: 'lobby', count: names.filter(Boolean).length, players: names, max: 4, room: roomId });
-      }
-    });
-
-    server.addEventListener('error', () => { });
-
-    return new Response(null, { status: 101, webSocket: client });
-  }
+  async webSocketMessage(ws,raw){await this.room.receive(ws,raw);}
+  async webSocketClose(ws){await this.room.disconnected(ws);}
+  async webSocketError(ws){try{ws.close(1011,'Connection error');}catch{}await this.room.disconnected(ws);}
+  async alarm(){await this.room.alarm();}
 }
-
 export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-    const roomId = (url.searchParams.get('room') || '').trim().toUpperCase();
-    if (!roomId) return new Response('Missing room', { status: 400 });
-    const id = env.MAHJONG_ROOMS.idFromName(roomId);
-    const room = env.MAHJONG_ROOMS.get(id);
-    return room.fetch(request);
+  async fetch(request,env){
+    const u=new URL(request.url);
+    if(u.pathname==='/health')return Response.json({ok:true,service:'jingao-mahjong',protocol:2,authority:'server'});
+    if(request.headers.get('Upgrade')?.toLowerCase()==='websocket'){
+      const room=(u.searchParams.get('room')||'').trim().toUpperCase();
+      if(!/^[A-Z0-9]{4,8}$/.test(room))return new Response('Invalid room',{status:400});
+      u.searchParams.set('room',room);
+      // New namespace key keeps old relay rooms out of the authoritative protocol.
+      return env.MAHJONG_ROOMS.get(env.MAHJONG_ROOMS.idFromName('v2:'+room)).fetch(new Request(u,request));
+    }
+    if(u.pathname==='/')u.pathname='/index.html';
+    const response=await env.ASSETS.fetch(new Request(u,request));
+    if(response.ok&&/-v\d+\.webp$/.test(u.pathname)){
+      const headers=new Headers(response.headers);
+      headers.set('Cache-Control','public, max-age=31536000, immutable');
+      return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+    }
+    return response;
   }
 };
-

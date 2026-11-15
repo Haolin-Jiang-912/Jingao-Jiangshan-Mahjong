@@ -1,16 +1,23 @@
 {
   "name": "jw-mahjong-hall",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "description": "鸡歪麻将厅 · 江山麻将像素风联机游戏",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node test-sim.js SIM_OK p8=8 ju=10"
+    "test": "node test-engine.js && node test-sim.js && node test-input.js && node test-room.mjs && node test-controller.mjs",
+    "build": "node scripts/build-assets.js",
+    "dev:cloudflare": "npm run build && wrangler dev --port 8787",
+    "deploy": "npm run build && wrangler deploy",
+    "test:network": "node test-network.js"
   },
   "dependencies": {
     "ws": "^8.18.0"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "wrangler": "^4.151.1"
   }
 }
