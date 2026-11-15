@@ -53,3 +53,7 @@ Cloudflare Worker 提供页面，每个房间由一个 Durable Object 执行规�
 - 当前浏览器自动化访问公网发生导航超时，因此最新视觉验收来自同源代码的本地真实浏览器；公网另外做 HTTP 与真实 WebSocket 核对，未把部署成功视为公网视觉验证。没有手机硬件或真实限速网络的性能测量。
 
 最终部署：Cloudflare Worker f6833ea0-84e4-4e16-85f6-77d6eaebfd13，页面 v24。
+
+## 2026-11-15 域名入口修复
+
+正式地址改为 https://mahjong.jianghaolin.com/。详情见 DOMAIN-ACCESS.md。原 Cloudflare 云端服务持续运行；本次补齐自定义域名并更新主站首页、作品页共享入口。新域名四客户端 167 条成功操作、两次结算通过。

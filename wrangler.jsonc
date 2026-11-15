@@ -4,6 +4,8 @@
   "main": "cloudflare-worker.js",
   "compatibility_date": "2026-10-18",
   "workers_dev": true,
+  "account_id": "14e78399e3b0e9815710fb54a27d5557",
+  "routes": [{ "pattern": "mahjong.jianghaolin.com", "custom_domain": true }],
   "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": true, "html_handling": "none" },
   "durable_objects": { "bindings": [{ "name": "MAHJONG_ROOMS", "class_name": "MahjongRoom" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["MahjongRoom"] }]

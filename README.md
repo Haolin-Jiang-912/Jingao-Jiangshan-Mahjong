@@ -1,6 +1,8 @@
 # 鸡歪麻将厅（江山麻将 · 校园怀旧像素风）
 
-在线游玩：<https://jingao-jiangshan-mahjong.jianghaolin.workers.dev/>
+在线游玩：<https://mahjong.jianghaolin.com/>
+
+已绑定个人域名，页面和 WebSocket 房间均使用该地址；旧 workers.dev 地址仅保留兼容。
 
 页面和联机房间都托管在 Cloudflare，不用内网穿透，也不用开发者电脑保持开机。任何同学都可以打开网址创建房间。
 
